@@ -1,0 +1,38 @@
+{
+  "name": "dvn_ethers_rs",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "setup": "bash ./scripts/bash/setup.bash",
+    "start": "bash ./scripts/bash/test.bash",
+    "send": "bash ./scripts/bash/send.bash",
+    "verify": "bash ./scripts/bash/verify.bash"
+  },
+  "devDependencies": {
+    "@layerzerolabs/lz-evm-messagelib-v2": "^3.0.1",
+    "@layerzerolabs/lz-evm-protocol-v2": "^3.0.1",
+    "@layerzerolabs/oapp-evm": "^0.0.4",
+    "@nomicfoundation/hardhat-ignition": "^0.15.5",
+    "@nomicfoundation/hardhat-ignition-viem": "^0.15.0",
+    "@nomicfoundation/hardhat-network-helpers": "^1.0.0",
+    "@nomicfoundation/hardhat-toolbox-viem": "^3.0.0",
+    "@nomicfoundation/hardhat-verify": "^2.0.0",
+    "@nomicfoundation/hardhat-viem": "^2.0.0",
+    "@nomicfoundation/ignition-core": "^0.15.5",
+    "@openzeppelin/contracts": "^5.0.2",
+    "@types/chai": "^4.2.0",
+    "@types/chai-as-promised": "^7.1.6",
+    "@types/mocha": ">=9.1.0",
+    "@types/node": "^22.5.5",
+    "chai": "^4.2.0",
+    "hardhat": "^2.22.10",
+    "hardhat-gas-reporter": "^1.0.8",
+    "local-ssl-proxy": "^2.0.5",
+    "solidity-bytes-utils": "^0.8.2",
+    "solidity-coverage": "^0.8.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.6.2",
+    "viem": "^2.7.6"
+  }
+}

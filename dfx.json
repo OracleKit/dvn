@@ -1,0 +1,17 @@
+{
+  "canisters": {
+    "dvn": {
+      "candid": "src/dvn/dvn.did",
+      "package": "dvn",
+      "type": "rust"
+    }
+  },
+  "defaults": {
+    "build": {
+      "args": "",
+      "packtool": ""
+    }
+  },
+  "output_env_file": ".env",
+  "version": 1
+}
