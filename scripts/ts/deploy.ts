@@ -1,10 +1,12 @@
-import { Chain, Hex, parseEther } from 'viem';
+import { Chain, Hex } from 'viem';
 import { ProviderWrapper } from '../../src/utils/provider';
 import { mainnet } from 'viem/chains';
 import { polygon } from 'viem/chains';
 
-const ethereumName = "ETHMAINNET";
-const polygonName = "POLYGONPOS";
+const senderName = "ETHMAINNET";
+const senderChain = mainnet;
+const receiverName = "POLYGONPOS";
+const receiverChain = polygon;
 
 function getProvider(name: string, chain: Chain) {
     const adminPrivateKey = process.env.ADMIN_PRIVATE_KEY as Hex;
@@ -16,27 +18,27 @@ function getProvider(name: string, chain: Chain) {
 }
 
 async function main() {
-    const ethProvider = getProvider(ethereumName, mainnet);
-    const polyProvider = getProvider(polygonName, polygon);
+    const senderProvider = getProvider(senderName, senderChain);
+    const receiverProvider = getProvider(receiverName, receiverChain);
 
     await Promise.all([
-        await ethProvider
+        await senderProvider
             .deployDVN()
-            .then(ethProvider.deployMockSender.bind(ethProvider)),
-        await polyProvider
+            .then(senderProvider.deployMockSender.bind(senderProvider)),
+        await receiverProvider
             .deployDVN()
-            .then(polyProvider.deployMockReceiver.bind(polyProvider))
+            .then(receiverProvider.deployMockReceiver.bind(receiverProvider))
     ]);
 
     await Promise.all([
-        ethProvider.setPeer(polyProvider),
-        polyProvider.setPeer(ethProvider)
+        senderProvider.setPeer(receiverProvider),
+        receiverProvider.setPeer(senderProvider)
     ]);
 
-    console.log(`${ethereumName}_DVN_ADDRESS=${ethProvider.dvn!}`);
-    console.log(`${ethereumName}_OAPP_ADDRESS=${ethProvider.mockApp!}`);
-    console.log(`${polygonName}_DVN_ADDRESS=${polyProvider.dvn!}`);
-    console.log(`${polygonName}_OAPP_ADDRESS=${polyProvider.mockApp!}`);
+    console.log(`${senderName}_DVN_ADDRESS=${senderProvider.dvn!}`);
+    console.log(`${senderName}_OAPP_ADDRESS=${senderProvider.mockApp!}`);
+    console.log(`${receiverName}_DVN_ADDRESS=${receiverProvider.dvn!}`);
+    console.log(`${receiverName}_OAPP_ADDRESS=${receiverProvider.mockApp!}`);
 }
 
 main();

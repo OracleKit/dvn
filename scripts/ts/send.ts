@@ -1,11 +1,12 @@
 import { Chain, Hex, parseEther } from 'viem';
 import { ProviderWrapper } from '../../src/utils/provider';
-import { mainnet } from 'viem/chains';
-import { polygon } from 'viem/chains';
+import { mainnet, polygon } from 'viem/chains';
 import { getContract } from '../../src/utils/evm';
 
-const ethereumName = "ETHMAINNET";
-const polygonName = "POLYGONPOS";
+const senderName = "ETHMAINNET";
+const senderChain = mainnet;
+const receiverName = "POLYGONPOS";
+const receiverChain = polygon;
 
 function getProvider(name: string, chain: Chain) {
     const adminPrivateKey = process.env.ADMIN_PRIVATE_KEY as Hex;
@@ -23,11 +24,13 @@ function getProvider(name: string, chain: Chain) {
 }
 
 async function main() {
-    const ethProvider = getProvider(ethereumName, mainnet);
-    const oappContract = await getContract(ethProvider, "MockOAppSender", ethProvider.mockApp!);
-    const dvnContract = await getContract(ethProvider, "DVN", ethProvider.dvn!);
-    const receipt = await ethProvider.awaitTransaction(
-        oappContract.write.send([30109, "Hello Polygon from Ethereum"], {
+    const senderProvider = getProvider(senderName, senderChain);
+    const receiverProvider = getProvider(receiverName, receiverChain);
+
+    const oappContract = await getContract(senderProvider, "MockOAppSender", senderProvider.mockApp!);
+    const dvnContract = await getContract(senderProvider, "DVN", senderProvider.dvn!);
+    const receipt = await senderProvider.awaitTransaction(
+        oappContract.write.send([receiverProvider.eid, "Hello World"], {
             value: parseEther('1')
         })
     );
