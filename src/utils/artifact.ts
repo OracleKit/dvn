@@ -4,14 +4,12 @@ import { DVN$Type } from "../../artifacts/src/contracts/DVN.sol/DVN";
 import { MockOAppReceiver$Type } from "../../artifacts/src/contracts/MockOAppReceiver.sol/MockOAppReceiver";
 import { MockOAppSender$Type } from "../../artifacts/src/contracts/MockOAppSender.sol/MockOAppSender";
 import { Test$Type } from "../../artifacts/src/contracts/Test.sol/Test";
-import { EndpointV2Mock$Type } from "../../artifacts/src/contracts/EndpointV2Mock.sol/EndpointV2Mock";
 
 export type ContractArtifacts = {
     DVN: DVN$Type,
     MockOAppReceiver: MockOAppReceiver$Type,
     MockOAppSender: MockOAppSender$Type,
     Test: Test$Type,
-    EndpointV2Mock: EndpointV2Mock$Type,
 };
 
 export type Contracts = keyof ContractArtifacts;
