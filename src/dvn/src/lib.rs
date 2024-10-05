@@ -1,5 +1,5 @@
 use ethers_core::utils::hex::ToHexExt;
-use state::{ChainState, ETHEREUM_MAINNET, POLYGON_POS};
+use state::{ChainState, ETHEREUM_MAINNET, POLYGON_AMOY, POLYGON_POS, ETHEREUM_HOLESKY};
 mod ether_utils;
 mod contracts;
 mod state;
@@ -40,8 +40,8 @@ async fn greet() {
     
     // "YESSS".to_string()
 
-    let source_contract = ETHEREUM_MAINNET.with_borrow(|state| state.dvn.clone());
-    let destination_contract = POLYGON_POS.with_borrow(|state| state.dvn.clone());
+    let source_contract = POLYGON_AMOY.with_borrow(|state| state.dvn.clone());
+    let destination_contract = ETHEREUM_HOLESKY.with_borrow(|state| state.dvn.clone());
     let jobs = source_contract.get_assigned_jobs().await;
     ic_cdk::println!("Verifying jobs: {:?}", jobs.len());
     ic_cdk::println!("Verifying jobs: {:?}", jobs.len());
@@ -77,16 +77,16 @@ async fn greet() {
 #[ic_cdk::update]
 async fn init_providers() {
     let mut state = ChainState::new(
-        env!("ETHMAINNET_RPC_SSL_URL"),
-        env!("ETHMAINNET_CHAIN_ID"),
-        env!("ETHMAINNET_DVN_ADDRESS")
+        env!("POLYGONAMOY_RPC_SSL_URL"),
+        env!("POLYGONAMOY_CHAIN_ID"),
+        env!("POLYGONAMOY_DVN_ADDRESS")
     ).await;
-    ETHEREUM_MAINNET.replace(state);
+    POLYGON_AMOY.replace(state);
 
     let mut state = ChainState::new(
-        env!("POLYGONPOS_RPC_SSL_URL"),
-        env!("POLYGONPOS_CHAIN_ID"),
-        env!("POLYGONPOS_DVN_ADDRESS")
+        env!("ETHEREUMHOLESKY_RPC_SSL_URL"),
+        env!("ETHEREUMHOLESKY_CHAIN_ID"),
+        env!("ETHEREUMHOLESKY_DVN_ADDRESS")
     ).await;
-    POLYGON_POS.replace(state);
+    ETHEREUM_HOLESKY.replace(state);
 }

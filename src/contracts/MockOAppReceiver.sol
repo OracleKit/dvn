@@ -9,6 +9,7 @@ import { UlnConfig } from "@layerzerolabs/lz-evm-messagelib-v2/contracts/uln/Uln
 
 contract MockOAppReceiver is OAppReceiver {
     bytes _ulnConfig;
+    string _text;
     
     constructor(
         address endpoint_,
@@ -27,6 +28,11 @@ contract MockOAppReceiver is OAppReceiver {
         });
 
         _ulnConfig = abi.encode(config_);
+        _text = "Hello world";
+    }
+
+    function getText() external view returns (string memory text) {
+        text = _text;
     }
 
     function initPeer(uint32 peerEid_, address peerAddress_) external {
@@ -46,5 +52,8 @@ contract MockOAppReceiver is OAppReceiver {
         bytes calldata message,
         address /*executor*/,
         bytes calldata /*_extraData*/
-    ) internal override {}
+    ) internal override {
+        (string memory text) = abi.decode(message, (string));
+        _text = text;
+    }
 }

@@ -23,4 +23,6 @@ impl ChainState {
 thread_local! {
     pub static ETHEREUM_MAINNET: RefCell<ChainState> = RefCell::default();    
     pub static POLYGON_POS: RefCell<ChainState> = RefCell::default();
+    pub static ETHEREUM_HOLESKY: RefCell<ChainState> = RefCell::default();
+    pub static POLYGON_AMOY: RefCell<ChainState> = RefCell::default();
 }

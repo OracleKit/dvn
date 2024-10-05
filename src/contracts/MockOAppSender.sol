@@ -12,6 +12,7 @@ contract MockOAppSender is OAppSender {
     using OptionsBuilder for bytes;
     bytes _options = OptionsBuilder.newOptions().addExecutorLzReceiveOption(50000, 0);
     bytes _ulnConfig;
+    string _text;
 
     constructor(
         address endpoint_,
@@ -30,6 +31,11 @@ contract MockOAppSender is OAppSender {
         });
 
         _ulnConfig = abi.encode(config_);
+        _text = "Hello world";
+    }
+
+    function getText() external view returns (string memory text) {
+        text = _text;
     }
 
     function initPeer(uint32 peerEid_, address peerAddress_) external {
@@ -41,6 +47,14 @@ contract MockOAppSender is OAppSender {
 
         endpoint.setConfig(address(this), sendLib_, params);
         setPeer(peerEid_, peerBytes_);
+    }
+
+    function quote(
+        uint32 dstEid_,
+        string memory message_
+    ) external view returns (MessagingFee memory fee) {
+        bytes memory payload_ = abi.encode(message_);
+        fee = _quote(dstEid_, payload_, _options, false);
     }
 
     function send(
