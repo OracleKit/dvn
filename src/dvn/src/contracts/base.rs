@@ -1,5 +1,5 @@
 use std::rc::Rc;
-use ethers_core::{abi::{self, Contract, Hash, Log, RawLog, RawTopicFilter, Token}, types::{self, transaction::eip2930::AccessList, Address, Bytes, Eip1559TransactionRequest, Filter, FilterBlockOption, U64}};
+use ethers_core::{abi::{self, Contract, Hash, Log, RawLog, RawTopicFilter, Token}, types::{self, transaction::eip2930::AccessList, Address, Bytes, Eip1559TransactionRequest, Filter, FilterBlockOption}};
 use crate::ether_utils::Provider;
 
 #[derive(Clone, Default)]
@@ -42,11 +42,17 @@ impl BaseContract {
         }
     }
 
-    pub async fn events(&self, event_name: &str, topics: RawTopicFilter) -> Vec<Log> {
+    pub async fn events(&self, event_name: &str, topics: RawTopicFilter, from_block: Option<u64>) -> Vec<Log> {
         let event = &self.abi.events_by_name(event_name).unwrap()[0];
         let filter = event.filter(topics).unwrap();
+        let from_block = if let Some(block) = from_block {
+            Some(block.into())
+        } else { 
+            None
+        };
+
         let logs = self.provider.get_logs(&Filter {
-            block_option: FilterBlockOption::Range { from_block: Some(types::BlockNumber::Number(U64::from(2474874))), to_block: None },
+            block_option: FilterBlockOption::Range { from_block, to_block: None },
             address: Some(ethers_core::types::ValueOrArray::Value(self.address.clone())),
             topics: [
                 Some(self._abi_to_types_topic(filter.topic0)),

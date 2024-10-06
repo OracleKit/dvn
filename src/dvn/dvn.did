@@ -1,5 +1,5 @@
 service : {
-    "greet": () -> ();
-    "init_providers": () -> ();
-    "public_key": () -> (text);
+    "process_jobs": () -> ();
+    "init_dvn": () -> ();
+    "address": () -> (text);
 }

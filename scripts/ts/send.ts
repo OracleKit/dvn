@@ -8,11 +8,6 @@ const senderChain = holesky;
 const receiverName = "POLYGONAMOY";
 const receiverChain = polygonAmoy;
 
-// const senderName = "ETHMAINNET";
-// const senderChain = holesky;
-// const receiverName = "POLYGONPOS";
-// const receiverChain = polygonAmoy;
-
 function getProvider(name: string, chain: Chain) {
     const adminPrivateKey = process.env.ADMIN_PRIVATE_KEY as Hex;
     const rpcUrl = process.env[name + "_RPC_SSL_URL"] as string;
@@ -38,11 +33,6 @@ async function main() {
     const fees = await oappContract.read.quote([receiverProvider.eid, "Hello polygon"]);
     const nativeFees = fees.nativeFee;
 
-
-    // console.log();
-    // console.log(parseEther('1'));
-    // console.log(await oappContract.read.peers([receiverProvider.eid]))
-
     const receipt = await senderProvider.awaitTransaction(
         oappContract.write.send([receiverProvider.eid, "Hello polygon"], {
             value: nativeFees
@@ -50,10 +40,6 @@ async function main() {
     );
 
     console.log(receipt);
-
-    console.log(await dvnContract.getEvents.JobAssigned({
-        fromBlock: 2474587n
-    }));
 }
 
 main();

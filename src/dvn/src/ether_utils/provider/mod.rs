@@ -1,6 +1,6 @@
 mod base;
 use base::BaseProvider;
-use ethers_core::{abi::Address, types::{transaction::eip2718::TypedTransaction, Eip1559TransactionRequest, Filter, Log, U256}, utils::hex::ToHexExt};
+use ethers_core::{abi::Address, types::{transaction::eip2718::TypedTransaction, Eip1559TransactionRequest, Filter, Log, U256, U64}, utils::hex::ToHexExt};
 
 use super::Signer;
 
@@ -26,6 +26,10 @@ impl Provider {
 
     pub async fn address(&self) -> Address {
         self.signer.address()
+    }
+    
+    pub async fn get_current_block(&self) -> U64 {
+        self.base.request("eth_blockNumber", [] as [u8; 0]).await
     }
 
     pub async fn get_balance(&self, account: &str) -> U256 {
@@ -65,7 +69,6 @@ impl Provider {
 
         let signature = self.signer.sign_transaction(&txn).await;
         let raw_signed = txn.rlp_signed(&signature);
-        ic_cdk::println!("{:?}", &raw_signed);
         self.base.request("eth_sendRawTransaction", (raw_signed, )).await
     }
 

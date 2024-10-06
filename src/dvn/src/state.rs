@@ -6,7 +6,8 @@ use std::str::FromStr;
 #[derive(Clone, Default)]
 pub struct ChainState {
     pub provider: Provider,
-    pub dvn: DVN
+    pub dvn: DVN,
+    pub last_processed_block: u64
 }
 
 impl ChainState {
@@ -14,9 +15,11 @@ impl ChainState {
         let chain_id: u64 = chain_id.parse().unwrap();
         let mut provider = Provider::new(rpc_url.to_string(), chain_id);
         provider.init().await;
+
+        let last_processed_block = provider.get_current_block().await.as_u64();
         let dvn = DVN::new(provider.clone(), Address::from_str(dvn_address).unwrap());
 
-        Self { provider, dvn }
+        Self { provider, dvn, last_processed_block }
     }
 }
 
