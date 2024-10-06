@@ -1,17 +1,12 @@
 import { Chain, Hex, parseEther } from 'viem';
 import { ProviderWrapper } from '../../src/utils/provider';
-import { holesky, mainnet, polygon, polygonAmoy } from 'viem/chains';
 import { getContract } from '../../src/utils/evm';
+import { polygonAmoy, polygonZkEvmCardona, holesky } from 'viem/chains';
 
 const senderName = "ETHEREUMHOLESKY";
 const senderChain = holesky;
 const receiverName = "POLYGONAMOY";
 const receiverChain = polygonAmoy;
-
-// const senderName = "ETHMAINNET";
-// const senderChain = holesky;
-// const receiverName = "POLYGONPOS";
-// const receiverChain = polygonAmoy;
 
 function getProvider(name: string, chain: Chain) {
     const adminPrivateKey = process.env.ADMIN_PRIVATE_KEY as Hex;
@@ -32,28 +27,16 @@ async function main() {
     const senderProvider = getProvider(senderName, senderChain);
     const receiverProvider = getProvider(receiverName, receiverChain);
 
-    const oappContract = await getContract(senderProvider, "MockOAppSender", senderProvider.mockApp!);
-    const dvnContract = await getContract(senderProvider, "DVN", senderProvider.dvn!);
+    const senderDvn = await getContract(senderProvider, "DVN", senderProvider.dvn!);
+    const receiverDvn = await getContract(receiverProvider, "DVN", receiverProvider.dvn!);
+    const senderOApp = await getContract(senderProvider, "MockOAppSender", senderProvider.mockApp!);
+    const receiverOApp = await getContract(receiverProvider, "MockOAppReceiver", receiverProvider.mockApp!);
 
-    const fees = await oappContract.read.quote([receiverProvider.eid, "Hello polygon"]);
-    const nativeFees = fees.nativeFee;
+    const senderText = await senderOApp.read.getText();
+    const receiverText = await receiverOApp.read.getText();
 
-
-    // console.log();
-    // console.log(parseEther('1'));
-    // console.log(await oappContract.read.peers([receiverProvider.eid]))
-
-    const receipt = await senderProvider.awaitTransaction(
-        oappContract.write.send([receiverProvider.eid, "Hello polygon"], {
-            value: nativeFees
-        })
-    );
-
-    console.log(receipt);
-
-    console.log(await dvnContract.getEvents.JobAssigned({
-        fromBlock: 2474587n
-    }));
+    console.log(`Sender Message (Ethereum Holensky): ${senderText}`);
+    console.log(`Receiver Message (Polygon Amoy): ${receiverText}`);
 }
 
 main();

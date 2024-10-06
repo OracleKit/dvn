@@ -7,7 +7,8 @@
     "setup": "bash ./scripts/bash/setup.bash",
     "start": "bash ./scripts/bash/test.bash",
     "send": "bash ./scripts/bash/send.bash",
-    "verify": "bash ./scripts/bash/verify.bash"
+    "verify": "bash ./scripts/bash/verify.bash",
+    "deploy:dvn": "bash ./scripts/bash/a.bash && npx ts-node ./scripts/ts/a.ts"
   },
   "devDependencies": {
     "@layerzerolabs/lz-evm-messagelib-v2": "^3.0.1",

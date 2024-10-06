@@ -1,5 +1,5 @@
 use std::rc::Rc;
-use ethers_core::{abi::{self, Contract, Hash, Log, RawLog, RawTopicFilter, Token}, types::{self, transaction::eip2930::AccessList, Address, Bytes, Eip1559TransactionRequest, Filter, FilterBlockOption}};
+use ethers_core::{abi::{self, Contract, Hash, Log, RawLog, RawTopicFilter, Token}, types::{self, transaction::eip2930::AccessList, Address, Bytes, Eip1559TransactionRequest, Filter, FilterBlockOption, U64}};
 use crate::ether_utils::Provider;
 
 #[derive(Clone, Default)]
@@ -46,13 +46,13 @@ impl BaseContract {
         let event = &self.abi.events_by_name(event_name).unwrap()[0];
         let filter = event.filter(topics).unwrap();
         let logs = self.provider.get_logs(&Filter {
-            block_option: FilterBlockOption::Range { from_block: None, to_block: None },
+            block_option: FilterBlockOption::Range { from_block: Some(types::BlockNumber::Number(U64::from(2474874))), to_block: None },
             address: Some(ethers_core::types::ValueOrArray::Value(self.address.clone())),
             topics: [
                 Some(self._abi_to_types_topic(filter.topic0)),
-                Some(self._abi_to_types_topic(filter.topic1)),
-                Some(self._abi_to_types_topic(filter.topic2)),
-                Some(self._abi_to_types_topic(filter.topic3))
+                None,
+                None,
+                None
             ]
         }).await;
 

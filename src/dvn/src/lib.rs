@@ -6,7 +6,7 @@ mod state;
 
 #[ic_cdk::update]
 async fn public_key() -> String {
-    let provider = ETHEREUM_MAINNET.with_borrow(|state| state.provider.clone());
+    let provider = POLYGON_AMOY.with_borrow(|state| state.provider.clone());
     let address = provider.address().await.encode_hex_with_prefix();
     address
 }
@@ -40,8 +40,8 @@ async fn greet() {
     
     // "YESSS".to_string()
 
-    let source_contract = POLYGON_AMOY.with_borrow(|state| state.dvn.clone());
-    let destination_contract = ETHEREUM_HOLESKY.with_borrow(|state| state.dvn.clone());
+    let source_contract = ETHEREUM_HOLESKY.with_borrow(|state| state.dvn.clone());
+    let destination_contract = POLYGON_AMOY.with_borrow(|state| state.dvn.clone());
     let jobs = source_contract.get_assigned_jobs().await;
     ic_cdk::println!("Verifying jobs: {:?}", jobs.len());
     ic_cdk::println!("Verifying jobs: {:?}", jobs.len());

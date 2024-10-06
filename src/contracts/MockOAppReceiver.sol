@@ -10,6 +10,8 @@ import { UlnConfig } from "@layerzerolabs/lz-evm-messagelib-v2/contracts/uln/Uln
 contract MockOAppReceiver is OAppReceiver {
     bytes _ulnConfig;
     string _text;
+
+    event Received(uint64 nonce);
     
     constructor(
         address endpoint_,
@@ -45,15 +47,27 @@ contract MockOAppReceiver is OAppReceiver {
         endpoint.setConfig(address(this), receiveLibrary_, params);
         setPeer(peerEid_, peerBytes_);
     }
-    
+
     function _lzReceive(
+        Origin calldata /*_origin*/,
+        bytes32 /*_guid*/,
+        bytes calldata /*message*/,
+        address /*_executor*/,
+        bytes calldata /*_extraData*/
+    ) internal override {
+        // (string memory text) = abi.decode(message, (string));
+        // _text = text;
+    }
+    
+    function lzReceive(
         Origin calldata _origin,
         bytes32 /*_guid*/,
         bytes calldata message,
-        address /*executor*/,
+        address /*_executor*/,
         bytes calldata /*_extraData*/
-    ) internal override {
+    ) public payable override {
         (string memory text) = abi.decode(message, (string));
         _text = text;
+        emit Received(_origin.nonce);
     }
 }

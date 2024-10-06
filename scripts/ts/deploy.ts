@@ -1,12 +1,12 @@
 import { Chain, Hex } from 'viem';
 import { ProviderWrapper } from '../../src/utils/provider';
-import { mainnet } from 'viem/chains';
+import { holesky, mainnet, polygonAmoy } from 'viem/chains';
 import { polygon } from 'viem/chains';
 
 const senderName = "ETHMAINNET";
-const senderChain = mainnet;
+const senderChain = holesky;
 const receiverName = "POLYGONPOS";
-const receiverChain = polygon;
+const receiverChain = polygonAmoy;
 
 function getProvider(name: string, chain: Chain) {
     const adminPrivateKey = process.env.ADMIN_PRIVATE_KEY as Hex;
@@ -41,4 +41,4 @@ async function main() {
     console.log(`${receiverName}_OAPP_ADDRESS=${receiverProvider.mockApp!}`);
 }
 
-main();
+// main();
