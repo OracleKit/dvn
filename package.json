@@ -9,7 +9,12 @@
     "send": "bash ./scripts/bash/send.bash",
     "verify": "bash ./scripts/bash/verify.bash",
     "deploy:dvn": "bash ./scripts/bash/a.bash && npx ts-node ./scripts/ts/a.ts",
-    "send-message": "npx ts-node ./scripts/ts/send.ts"
+    "send-message": "npx ts-node ./scripts/ts/send.ts",
+    "deploy": "bash ./scripts/bash/deploy.bash",
+    "suite:new": "bash ./scripts/bash/suite/new.bash",
+    "suite:add": "bash ./scripts/bash/suite/add.bash",
+    "suite:list": "bash ./scripts/bash/suite/list.bash",
+    "suite:start": "bash ./scripts/bash/suite/start.bash"
   },
   "devDependencies": {
     "@layerzerolabs/lz-evm-messagelib-v2": "^3.0.1",

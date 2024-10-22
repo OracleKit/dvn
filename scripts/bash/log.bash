@@ -1,16 +1,25 @@
-_LOGS_DIR=./logs
+_LOGS_DIR=./.sink/logs
 
-function _get_logs_file_path {
+# Usage: [COMPONENT_NAME]
+function pretty_log_file {
     echo "$_LOGS_DIR/$1.txt"
+}
+
+# Usage: [COMPONENT_NAME]
+function pretty_log_term {
+    PREFIX=$1
+    while IFS=$(echo -en "\n\b") read -r line; do
+        echo "[" $PREFIX "]" $line
+    done
 }
 
 # Usage: [COMPONENT_NAME]
 function pretty_log {
     PREFIX=$1
-    LOG_FILE=$(_get_logs_file_path $1)
+    LOG_FILE=$(pretty_log_file $1)
     while IFS= read -r line; do
         echo $line >> $LOG_FILE
-        echo "[" $PREFIX "]" $line
+        echo $line | pretty_log_term $PREFIX
     done
 }
 
