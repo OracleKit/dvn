@@ -51,4 +51,6 @@ setup_admin_wallet
 start_dfx
 start_chains
 
+echo "Suite ready." | pretty_log_term bash
+
 wait

@@ -1,3 +1,5 @@
+source $DIRNAME/log.bash
+
 export SINK_DIR=./.sink
 export SINK_LOGS_DIR=$SINK_DIR/logs
 export SINK_ENV_DIR=$SINK_DIR/env
@@ -9,8 +11,9 @@ export USER_CONFIG_ENV_FILE=.env.config
 export DEPLOYED_ENV_LOCAL_FILE=.env.local
 
 function _terminate_trap {
-    echo "TERMINATING"
     jobs -p | xargs kill -s SIGTERM 2>/dev/null
+    echo "Terminating..." | pretty_log_term bash
+    exit
 }
 
 function terminate {
