@@ -24,9 +24,9 @@ function start_dfx {
 
 function deploy_dvn {
     dfx deploy dvn 2>&1
-    dfx canister call dvn init_providers 2>&1
+    dfx canister call dvn init_dvn 2>&1
 }
 
 function get_dvn_address {
-    dfx canister call dvn public_key | awk -F'"' '{ print $2 }'
+    dfx canister call dvn address | awk -F'"' '{ print $2 }'
 }
