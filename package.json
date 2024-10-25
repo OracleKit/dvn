@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "license": "MIT",
+  "type": "module",
   "scripts": {
     "setup": "bash ./scripts/bash/setup.bash",
     "start": "bash ./scripts/bash/test.bash",
@@ -14,7 +15,9 @@
     "suite:list": "bash ./scripts/bash/suite/list.bash",
     "suite:start": "bash ./scripts/bash/suite/start.bash",
     "deploy:contracts": "bash ./scripts/bash/deploy/contracts.bash",
-    "deploy:dvn": "bash ./scripts/bash/deploy/dvn.bash"
+    "deploy:dvn": "bash ./scripts/bash/deploy/dvn.bash",
+    "test:contracts": "forge test",
+    "test:dvn": "mocha --import=tsx"
   },
   "devDependencies": {
     "@layerzerolabs/lz-evm-messagelib-v2": "^3.0.1",
@@ -32,13 +35,14 @@
     "@types/chai-as-promised": "^7.1.6",
     "@types/mocha": ">=9.1.0",
     "@types/node": "^22.5.5",
-    "chai": "^4.2.0",
+    "chai": "^5.1.2",
     "hardhat": "^2.22.10",
     "hardhat-gas-reporter": "^1.0.8",
     "local-ssl-proxy": "^2.0.5",
+    "mocha": "^10.7.3",
     "solidity-bytes-utils": "^0.8.2",
     "solidity-coverage": "^0.8.1",
-    "ts-node": "^10.9.2",
+    "tsx": "^4.19.1",
     "typescript": "^5.6.2",
     "viem": "^2.7.6"
   }
