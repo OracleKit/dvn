@@ -1,44 +1,38 @@
-import { Chain, Hex } from 'viem';
-import { ProviderWrapper } from '../../src/utils/provider';
-import { holesky, mainnet, polygonAmoy } from 'viem/chains';
-import { polygon } from 'viem/chains';
+import { setSuiteEnv } from "./utils/env";
+import { getProvider } from "./utils/provider";
 
-const senderName = "ETHMAINNET";
-const senderChain = holesky;
-const receiverName = "POLYGONPOS";
-const receiverChain = polygonAmoy;
+async function main(chains: string[]) {
+    const providers = chains.map(chain => getProvider(chain));
 
-function getProvider(name: string, chain: Chain) {
-    const adminPrivateKey = process.env.ADMIN_PRIVATE_KEY as Hex;
-    const rpcUrl = process.env[name + "_RPC_URL"] as string;
-    const eid = parseInt(process.env[name + "_ENDPOINT_ID"] as string);
-    const endpoint = process.env[name + "_ENDPOINT_ADDRESS"] as Hex;
+    await Promise.all(
+        providers.map(
+            async provider => {
+                await provider.deployDVN();
+                await provider.deployMockOApp();
+            }
+        )
+    );
 
-    return new ProviderWrapper(adminPrivateKey, rpcUrl, chain, endpoint, eid);
+    await Promise.all(
+        providers.map(
+            async (providerA, i) => {
+                await Promise.all(
+                    providers.slice(i+1).map(
+                        async providerB => {
+                            await providerA.setPeer(providerB);
+                            await providerB.setPeer(providerA);
+                        }
+                    )
+                )
+            }
+        )
+    );
+
+    providers.forEach(async (provider, i) => {
+        let name = chains[i].toUpperCase();
+        await setSuiteEnv(`${name}_DVN_ADDRESS`, provider.dvn!);
+        await setSuiteEnv(`${name}_OAPP_ADDRESS`, provider.mockApp!);
+    })
 }
 
-async function main() {
-    const senderProvider = getProvider(senderName, senderChain);
-    const receiverProvider = getProvider(receiverName, receiverChain);
-
-    await Promise.all([
-        await senderProvider
-            .deployDVN()
-            .then(senderProvider.deployMockSender.bind(senderProvider)),
-        await receiverProvider
-            .deployDVN()
-            .then(receiverProvider.deployMockReceiver.bind(receiverProvider))
-    ]);
-
-    await Promise.all([
-        senderProvider.setPeer(receiverProvider),
-        receiverProvider.setPeer(senderProvider)
-    ]);
-
-    console.log(`${senderName}_DVN_ADDRESS=${senderProvider.dvn!}`);
-    console.log(`${senderName}_OAPP_ADDRESS=${senderProvider.mockApp!}`);
-    console.log(`${receiverName}_DVN_ADDRESS=${receiverProvider.dvn!}`);
-    console.log(`${receiverName}_OAPP_ADDRESS=${receiverProvider.mockApp!}`);
-}
-
-// main();
+main(process.argv.slice(2));
