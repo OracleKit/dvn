@@ -38,7 +38,7 @@ jobs:
           forge --version
 
       - name: setup pocket-ic bin cache
-        use: actions/cache@v4
+        uses: actions/cache@v4
         with:
           path: ./.sink/bin/pocket-ic
           key: pocket-ic-cache
