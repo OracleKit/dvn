@@ -1,4 +1,4 @@
-import { assert, expect } from "chai";
+import { assert } from "chai";
 import { PocketIc, Actor } from "@hadronous/pic";
 import { idlFactory, type _SERVICE } from "./declarations/dvn/dvn.did";
 import { Principal } from "@dfinity/principal";
