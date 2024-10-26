@@ -11,6 +11,7 @@ pub struct ChainState {
 }
 
 impl ChainState {
+    #[allow(dead_code)]
     pub async fn new(rpc_url: &str, chain_id: &str, dvn_address: &str) -> Self {
         let chain_id: u64 = chain_id.parse().unwrap();
         let mut provider = Provider::new(rpc_url.to_string(), chain_id);

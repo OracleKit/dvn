@@ -32,6 +32,7 @@ impl Provider {
         self.base.request("eth_blockNumber", [] as [u8; 0]).await
     }
 
+    #[allow(dead_code)]
     pub async fn get_balance(&self, account: &str) -> U256 {
         self.base.request("eth_getBalance", (account, "latest")).await
     }

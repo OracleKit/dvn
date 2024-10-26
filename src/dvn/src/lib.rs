@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 use ethers_core::utils::hex::ToHexExt;
-use state::{ChainState, POLYGON_AMOY, ETHEREUM_HOLESKY};
+use state::{POLYGON_AMOY, ETHEREUM_HOLESKY};
 mod ether_utils;
 mod contracts;
 mod state;
