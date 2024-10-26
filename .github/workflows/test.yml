@@ -37,6 +37,12 @@ jobs:
           dfx --version
           forge --version
 
+      - name: setup pocket-ic bin cache
+        use: actions/cache@v4
+        with:
+          path: ./.sink/bin/pocket-ic
+          key: pocket-ic-cache
+
       - name: install deps
         run: |
           yarn install --frozen-lockfile
