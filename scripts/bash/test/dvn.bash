@@ -9,5 +9,3 @@ $SINK_BIN_DIR/pocket-ic -p 49462 >/dev/null &
 export POCKET_IC_URL=http://localhost:49462
 
 npx mocha --import=tsx
-
-terminate

@@ -20,6 +20,6 @@ describe("DVN", function() {
     });
 
     it("Testing if deployed", function() {
-        assert(!dvnCanisterId, "DVN deployed");
+        assert(dvnCanisterId, "DVN deployed");
     });
 });
