@@ -1,0 +1,57 @@
+name: Tests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: setup nodejs
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: yarn
+      
+      - name: setup rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          target: wasm32-unknown-unknown
+      
+      - name: setup dfx
+        uses: dfinity/setup-dfx@main
+
+      - name: setup foundry
+        uses: foundry-rs/foundry-toolchain@v1
+
+      - name: verify installs
+        run: |
+          node --version
+          yarn --version
+          cargo --version
+          dfx --version
+          forge --version
+
+      - name: install deps
+        run: |
+          yarn install --frozen-lockfile
+          forge install
+          yarn setup
+      
+      - name: build contracts & canisters
+        run: |
+          yarn build:contracts
+          yarn build:dvn
+      
+      - name: run smart contract tests
+        run: |
+          yarn test:contracts
+
+      - name: run dvn canister tests
+        run: |
+          yarn test:dvn

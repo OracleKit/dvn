@@ -38,19 +38,19 @@ async fn process_jobs() {
 
 #[ic_cdk::update]
 async fn init_dvn() {
-    let mut state = ChainState::new(
-        env!("POLYGONAMOY_RPC_SSL_URL"),
-        env!("POLYGONAMOY_CHAIN_ID"),
-        env!("POLYGONAMOY_DVN_ADDRESS")
-    ).await;
-    POLYGON_AMOY.replace(state);
+    // let mut state = ChainState::new(
+    //     env!("POLYGONAMOY_RPC_SSL_URL"),
+    //     env!("POLYGONAMOY_CHAIN_ID"),
+    //     env!("POLYGONAMOY_DVN_ADDRESS")
+    // ).await;
+    // POLYGON_AMOY.replace(state);
 
-    let mut state = ChainState::new(
-        env!("ETHEREUMHOLESKY_RPC_SSL_URL"),
-        env!("ETHEREUMHOLESKY_CHAIN_ID"),
-        env!("ETHEREUMHOLESKY_DVN_ADDRESS")
-    ).await;
-    ETHEREUM_HOLESKY.replace(state);
+    // let mut state = ChainState::new(
+    //     env!("ETHEREUMHOLESKY_RPC_SSL_URL"),
+    //     env!("ETHEREUMHOLESKY_CHAIN_ID"),
+    //     env!("ETHEREUMHOLESKY_DVN_ADDRESS")
+    // ).await;
+    // ETHEREUM_HOLESKY.replace(state);
 
     ic_cdk_timers::set_timer_interval(
         Duration::from_secs(30), 
