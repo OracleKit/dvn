@@ -12,10 +12,11 @@ export USER_CONFIG_ENV_FILE=.env.config
 export DEPLOYED_ENV_LOCAL_FILE=.env.local
 
 function _terminate_trap {
+    exit_code=$?
     set +e
     jobs -p | xargs kill -s SIGTERM 2>/dev/null
     echo "Terminating..." | pretty_log_term bash
-    exit
+    exit $exit_code
 }
 
 function terminate {
@@ -26,6 +27,7 @@ function terminate {
 function setup_trap_handlers {
     trap _terminate_trap SIGINT
     trap _terminate_trap SIGTERM
+    trap _terminate_trap EXIT
 }
 
 function setup_directories {
