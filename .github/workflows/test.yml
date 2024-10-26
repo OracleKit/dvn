@@ -16,13 +16,13 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ./.sink/bin/pocket-ic
-          key: pocket-ic-cache
+          key: pocket-ic-cache-6.0.0
       
       - name: setup forge install cache
         uses: actions/cache@v4
         with:
           path: ./lib/forge-std
-          key: forge-std-cache
+          key: forge-std-cache-${{ hashFiles('./lib/**') }}
 
       - name: setup nodejs
         uses: actions/setup-node@v4
