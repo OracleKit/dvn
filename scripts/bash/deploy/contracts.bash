@@ -1,3 +1,5 @@
+set -e
+
 DIRNAME=$(dirname $(dirname $0))
 source $DIRNAME/common.bash
 
