@@ -1,9 +1,7 @@
 {
   "name": "dvn_ethers_rs",
   "version": "1.0.0",
-  "main": "index.js",
   "license": "MIT",
-  "type": "module",
   "scripts": {
     "setup": "bash ./scripts/bash/setup.bash",
     "build:dvn": "bash ./scripts/bash/build/dvn.bash",
@@ -39,7 +37,7 @@
     "@types/chai-as-promised": "^7.1.6",
     "@types/mocha": ">=9.1.0",
     "@types/node": "^22.5.5",
-    "chai": "^5.1.2",
+    "chai": "^4.5.0",
     "hardhat": "^2.22.10",
     "hardhat-gas-reporter": "^1.0.8",
     "local-ssl-proxy": "^2.0.5",
