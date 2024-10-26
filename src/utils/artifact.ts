@@ -3,12 +3,14 @@ import path from "path";
 import { DVN$Type } from "../../artifacts/src/contracts/DVN.sol/DVN";
 import { MockOAppReceiver$Type } from "../../artifacts/src/contracts/MockOAppReceiver.sol/MockOAppReceiver";
 import { MockOAppSender$Type } from "../../artifacts/src/contracts/MockOAppSender.sol/MockOAppSender";
+import { MockOApp$Type } from "../../artifacts/src/contracts/MockOApp.sol/MockOApp";
 import { Test$Type } from "../../artifacts/src/contracts/Test.sol/Test";
 
 export type ContractArtifacts = {
     DVN: DVN$Type,
     MockOAppReceiver: MockOAppReceiver$Type,
     MockOAppSender: MockOAppSender$Type,
+    MockOApp: MockOApp$Type,
     Test: Test$Type,
 };
 

@@ -29,4 +29,4 @@ dist/
 
 artifacts/
 cache/
-logs/
+.sink/
