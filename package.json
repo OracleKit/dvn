@@ -14,12 +14,14 @@
     "suite:add": "bash ./scripts/bash/suite/add.bash",
     "suite:list": "bash ./scripts/bash/suite/list.bash",
     "suite:start": "bash ./scripts/bash/suite/start.bash",
+    "suite:run": "bash ./scripts/bash/suite/run.bash",
     "deploy:contracts": "bash ./scripts/bash/deploy/contracts.bash",
     "deploy:dvn": "bash ./scripts/bash/deploy/dvn.bash",
     "test:contracts": "forge test",
     "test:dvn": "mocha --import=tsx"
   },
   "devDependencies": {
+    "@hadronous/pic": "^0.8.1",
     "@layerzerolabs/lz-evm-messagelib-v2": "^3.0.1",
     "@layerzerolabs/lz-evm-protocol-v2": "^3.0.1",
     "@layerzerolabs/oapp-evm": "^0.0.4",
