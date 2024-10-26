@@ -39,5 +39,7 @@ function setup_pocketic_bin {
     rm pocket-ic-x86_64-darwin.gz 2>/dev/null
     mv pocket-ic-x86_64-darwin pocket-ic
     chmod +x pocket-ic
-    xattr -dr com.apple.quarantine pocket-ic
+    if [ "$(uname)" == "Darwin" ]; then
+        xattr -dr com.apple.quarantine pocket-ic
+    fi
 }
