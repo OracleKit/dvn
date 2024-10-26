@@ -28,13 +28,13 @@ function setup_trap_handlers {
 }
 
 function setup_directories {
-    mkdir $SINK_DIR 2>/dev/null
-    mkdir $SINK_LOGS_DIR 2>/dev/null
-    mkdir $SINK_ENV_DIR 2>/dev/null
-    mkdir $SINK_BIN_DIR 2>/dev/null
-    touch $SUITE_CHAINS_LIST_FILE 2>/dev/null
-    touch $SUITE_CHAINS_ENV_FILE 2>/dev/null
-    touch $SUITE_GENERATED_ENV_FILE 2>/dev/null
+    mkdir $SINK_DIR 2>/dev/null || true
+    mkdir $SINK_LOGS_DIR 2>/dev/null || true
+    mkdir $SINK_ENV_DIR 2>/dev/null || true
+    mkdir $SINK_BIN_DIR 2>/dev/null || true
+    touch $SUITE_CHAINS_LIST_FILE 2>/dev/null || true
+    touch $SUITE_CHAINS_ENV_FILE 2>/dev/null || true
+    touch $SUITE_GENERATED_ENV_FILE 2>/dev/null || true
 }
 
 # Usage: [ENV_FILE_NAME]

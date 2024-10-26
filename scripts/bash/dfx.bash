@@ -32,8 +32,10 @@ function get_dvn_address {
     dfx canister call dvn address | awk -F'"' '{ print $2 }'
 }
 
+# Installs to $SINK_BIN_DIR/pocket-ic
 function setup_pocketic_bin {
     cd $SINK_BIN_DIR
+    rm -r $SINK_BIN_DIR/pocket-ic 2>/dev/null || true
     
     if [ "$(uname)" == "Darwin" ]; then
         wget https://github.com/dfinity/pocketic/releases/download/6.0.0/pocket-ic-x86_64-darwin.gz
