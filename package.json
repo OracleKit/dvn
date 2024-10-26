@@ -5,6 +5,7 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
+    "setup": "bash ./scripts/bash/setup.bash",
     "build:dvn": "bash ./scripts/bash/build/dvn.bash",
     "build:contracts": "bash ./scripts/bash/build/contracts.bash",
     "suite:new": "bash ./scripts/bash/suite/new.bash",
@@ -15,7 +16,7 @@
     "deploy:contracts": "bash ./scripts/bash/deploy/contracts.bash",
     "deploy:dvn": "bash ./scripts/bash/deploy/dvn.bash",
     "test:contracts": "forge test",
-    "test:dvn": "mocha --import=tsx --require=./test/dvn/fixtures.ts"
+    "test:dvn": "bash ./scripts/bash/test/dvn.bash"
   },
   "devDependencies": {
     "@hadronous/pic": "^0.8.1",

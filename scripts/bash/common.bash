@@ -3,6 +3,7 @@ source $DIRNAME/log.bash
 export SINK_DIR=./.sink
 export SINK_LOGS_DIR=$SINK_DIR/logs
 export SINK_ENV_DIR=$SINK_DIR/env
+export SINK_BIN_DIR=$SINK_DIR/bin
 export SUITE_CHAINS_LIST_FILE=$SINK_ENV_DIR/chains
 export SUITE_CHAINS_ENV_FILE=$SINK_ENV_DIR/.env.chains
 export SUITE_GENERATED_ENV_FILE=$SINK_ENV_DIR/.env.generated
@@ -30,6 +31,7 @@ function setup_directories {
     mkdir $SINK_DIR 2>/dev/null
     mkdir $SINK_LOGS_DIR 2>/dev/null
     mkdir $SINK_ENV_DIR 2>/dev/null
+    mkdir $SINK_BIN_DIR 2>/dev/null
     touch $SUITE_CHAINS_LIST_FILE 2>/dev/null
     touch $SUITE_CHAINS_ENV_FILE 2>/dev/null
     touch $SUITE_GENERATED_ENV_FILE 2>/dev/null
