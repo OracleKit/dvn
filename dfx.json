@@ -3,7 +3,10 @@
     "dvn": {
       "candid": "src/dvn/dvn.did",
       "package": "dvn",
-      "type": "rust"
+      "type": "rust",
+      "declarations": {
+        "output": "test/dvn/declarations/dvn"
+      }
     }
   },
   "defaults": {
