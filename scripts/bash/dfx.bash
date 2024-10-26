@@ -40,14 +40,14 @@ function setup_pocketic_bin {
     if [ "$(uname)" == "Darwin" ]; then
         wget https://github.com/dfinity/pocketic/releases/download/6.0.0/pocket-ic-x86_64-darwin.gz
         gzip -d pocket-ic-x86_64-darwin.gz
-        rm pocket-ic-x86_64-darwin.gz 2>/dev/null
+        rm pocket-ic-x86_64-darwin.gz 2>/dev/null || true
         mv pocket-ic-x86_64-darwin pocket-ic
         chmod +x pocket-ic
         xattr -dr com.apple.quarantine pocket-ic
     else
         wget https://github.com/dfinity/pocketic/releases/download/6.0.0/pocket-ic-x86_64-linux.gz
         gzip -d pocket-ic-x86_64-linux.gz
-        rm pocket-ic-x86_64-linux.gz 2>/dev/null
+        rm pocket-ic-x86_64-linux.gz 2>/dev/null || true
         mv pocket-ic-x86_64-linux pocket-ic
         chmod +x pocket-ic
     fi
