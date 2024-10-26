@@ -10,6 +10,7 @@ struct Request<'a, T: Serialize> {
     params: T
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Deserialize)]
 struct ResponseError {
     code: u128,
@@ -17,6 +18,7 @@ struct ResponseError {
 }
 
 #[derive(Debug, Deserialize)]
+#[allow(dead_code)]
 struct Response<'a> {
     #[serde(borrow)]
     result: Option<&'a RawValue>,
