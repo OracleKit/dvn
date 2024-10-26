@@ -12,9 +12,11 @@ export USER_CONFIG_ENV_FILE=.env.config
 export DEPLOYED_ENV_LOCAL_FILE=.env.local
 
 function _terminate_trap {
+    exit_code=$?
+    set +e
     jobs -p | xargs kill -s SIGTERM 2>/dev/null
     echo "Terminating..." | pretty_log_term bash
-    exit
+    exit $exit_code
 }
 
 function terminate {
@@ -25,25 +27,30 @@ function terminate {
 function setup_trap_handlers {
     trap _terminate_trap SIGINT
     trap _terminate_trap SIGTERM
+    trap _terminate_trap EXIT
 }
 
 function setup_directories {
-    mkdir $SINK_DIR 2>/dev/null || true
-    mkdir $SINK_LOGS_DIR 2>/dev/null || true
-    mkdir $SINK_ENV_DIR 2>/dev/null || true
-    mkdir $SINK_BIN_DIR 2>/dev/null || true
-    touch $SUITE_CHAINS_LIST_FILE 2>/dev/null || true
-    touch $SUITE_CHAINS_ENV_FILE 2>/dev/null || true
-    touch $SUITE_GENERATED_ENV_FILE 2>/dev/null || true
+    set +e
+    mkdir $SINK_DIR 2>/dev/null
+    mkdir $SINK_LOGS_DIR 2>/dev/null
+    mkdir $SINK_ENV_DIR 2>/dev/null
+    mkdir $SINK_BIN_DIR 2>/dev/null
+    touch $SUITE_CHAINS_LIST_FILE 2>/dev/null
+    touch $SUITE_CHAINS_ENV_FILE 2>/dev/null
+    touch $SUITE_GENERATED_ENV_FILE 2>/dev/null
+    set -e
 }
 
 # Usage: [ENV_FILE_NAME]
 function source_env {
-    export $(cat $1 | xargs)
+    set -a
+    source $1
+    set +a
 }
 
 # Usage: [ENV_FILE_NAME]
 function renew_file {
-    rm $1 2>/dev/null
+    rm $1 2>/dev/null || true
     touch $1
 }

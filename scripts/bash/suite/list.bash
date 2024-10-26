@@ -1,7 +1,7 @@
+set -e
+
 DIRNAME=$(dirname $(dirname $0))
 source $DIRNAME/common.bash
-
-setup_directories
 
 echo
 echo "Chains in suite:"
