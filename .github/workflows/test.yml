@@ -12,6 +12,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: setup pocket-ic bin cache
+        uses: actions/cache@v4
+        with:
+          path: ./.sink/bin/pocket-ic
+          key: pocket-ic-cache
+      
+      - name: setup forge install cache
+        uses: actions/cache@v4
+        with:
+          path: ./lib/forge-std
+          key: forge-std-cache
+
       - name: setup nodejs
         uses: actions/setup-node@v4
         with:
@@ -36,12 +48,6 @@ jobs:
           cargo --version
           dfx --version
           forge --version
-
-      - name: setup pocket-ic bin cache
-        uses: actions/cache@v4
-        with:
-          path: ./.sink/bin/pocket-ic
-          key: pocket-ic-cache
 
       - name: install deps
         run: |
