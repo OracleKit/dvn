@@ -5,11 +5,8 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "setup": "bash ./scripts/bash/setup.bash",
-    "start": "bash ./scripts/bash/test.bash",
-    "send": "bash ./scripts/bash/send.bash",
-    "verify": "bash ./scripts/bash/verify.bash",
-    "send-message": "npx ts-node ./scripts/ts/send.ts",
+    "build:dvn": "bash ./scripts/bash/build/dvn.bash",
+    "build:contracts": "bash ./scripts/bash/build/contracts.bash",
     "suite:new": "bash ./scripts/bash/suite/new.bash",
     "suite:add": "bash ./scripts/bash/suite/add.bash",
     "suite:list": "bash ./scripts/bash/suite/list.bash",
@@ -18,7 +15,7 @@
     "deploy:contracts": "bash ./scripts/bash/deploy/contracts.bash",
     "deploy:dvn": "bash ./scripts/bash/deploy/dvn.bash",
     "test:contracts": "forge test",
-    "test:dvn": "mocha --import=tsx"
+    "test:dvn": "mocha --import=tsx --require=./test/dvn/fixtures.ts"
   },
   "devDependencies": {
     "@hadronous/pic": "^0.8.1",
