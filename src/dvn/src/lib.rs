@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 use ethers_core::utils::hex::ToHexExt;
-use state::{POLYGON_AMOY, ETHEREUM_HOLESKY};
+use state::{ChainState, ETHEREUM_HOLESKY, POLYGON_AMOY};
 mod ether_utils;
 mod contracts;
 mod state;
@@ -33,24 +33,26 @@ async fn _process_jobs() {
 
 #[ic_cdk::update]
 async fn process_jobs() {
+    ic_cdk::println!("{:?}", ic_cdk::api::instruction_counter());
     _process_jobs().await;
+    ic_cdk::println!("{:?}", ic_cdk::api::instruction_counter());
 }
 
 #[ic_cdk::update]
 async fn init_dvn() {
-    // let mut state = ChainState::new(
-    //     env!("POLYGONAMOY_RPC_SSL_URL"),
-    //     env!("POLYGONAMOY_CHAIN_ID"),
-    //     env!("POLYGONAMOY_DVN_ADDRESS")
-    // ).await;
-    // POLYGON_AMOY.replace(state);
+    let mut state = ChainState::new(
+        env!("POLYGONAMOY_RPC_SSL_URL"),
+        env!("POLYGONAMOY_CHAIN_ID"),
+        env!("POLYGONAMOY_DVN_ADDRESS")
+    ).await;
+    POLYGON_AMOY.replace(state);
 
-    // let mut state = ChainState::new(
-    //     env!("ETHEREUMHOLESKY_RPC_SSL_URL"),
-    //     env!("ETHEREUMHOLESKY_CHAIN_ID"),
-    //     env!("ETHEREUMHOLESKY_DVN_ADDRESS")
-    // ).await;
-    // ETHEREUM_HOLESKY.replace(state);
+    let mut state = ChainState::new(
+        env!("ETHEREUMHOLESKY_RPC_SSL_URL"),
+        env!("ETHEREUMHOLESKY_CHAIN_ID"),
+        env!("ETHEREUMHOLESKY_DVN_ADDRESS")
+    ).await;
+    ETHEREUM_HOLESKY.replace(state);
 
     ic_cdk_timers::set_timer_interval(
         Duration::from_secs(30), 

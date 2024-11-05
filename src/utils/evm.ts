@@ -23,7 +23,7 @@ export async function deployContract<T extends Contracts>(provider: ProviderWrap
 export async function getContract<T extends Contracts>(provider: ProviderWrapper, contract: T, address: Hex) {
     const artifact = await loadContract(contract);
     const abi = artifact.abi as ABI<T>;
-    const client = { wallet: provider.wallet };
+    const client = { wallet: provider.wallet, public: provider.wallet };
 
     const instance = getContractInstance({ address, abi, client });
 

@@ -50,7 +50,8 @@ renew_file $DEPLOYED_ENV_LOCAL_FILE
 
 source_env $SUITE_CHAINS_ENV_FILE
 setup_admin_wallet
-start_dfx
+start_dfx 42000
+echo "DFX_URL=http://localhost:42000" >> $SUITE_GENERATED_ENV_FILE
 start_chains
 
 echo "Suite ready." | pretty_log_term bash

@@ -13,10 +13,12 @@ function _wait_for_dfx_start {
     done
 }
 
+# Usage: [PORT]
 function start_dfx {
+    port=$1
     echo "Starting local network..." | _pretty_log_term_dfx
     dfx stop >/dev/null 2>&1
-    dfx start --clean >$LOG_FILE_DFX 2>&1 &
+    dfx start --clean >$LOG_FILE_DFX --host "0.0.0.0:$port" 2>&1 &
     
     _wait_for_dfx_start
     tail -n0 -f $LOG_FILE_DFX | _pretty_log_term_dfx &
