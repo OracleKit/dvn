@@ -2,7 +2,7 @@ mod base;
 use base::BaseProvider;
 use ethers_core::{abi::Address, types::{transaction::eip2718::TypedTransaction, Eip1559TransactionRequest, Filter, Log, U256, U64}, utils::hex::ToHexExt};
 
-use super::Signer;
+use crate::signer::Signer;
 
 #[derive(Clone, Default)]
 pub struct Provider {

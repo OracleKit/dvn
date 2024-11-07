@@ -1,6 +1,6 @@
 use std::rc::Rc;
 use ethers_core::{abi::{self, Contract, Hash, Log, RawLog, RawTopicFilter, Token}, types::{self, transaction::eip2930::AccessList, Address, Bytes, Eip1559TransactionRequest, Filter, FilterBlockOption}};
-use crate::ether_utils::Provider;
+use crate::provider::Provider;
 
 #[derive(Clone, Default)]
 pub struct BaseContract {

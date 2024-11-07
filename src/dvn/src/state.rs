@@ -1,6 +1,6 @@
 use std::cell::RefCell;
 use ethers_core::abi::Address;
-use crate::{contracts::DVN, ether_utils::Provider};
+use crate::{contracts::DVN, provider::Provider};
 use std::str::FromStr;
 
 #[derive(Clone, Default)]

@@ -2,9 +2,10 @@ use std::time::Duration;
 
 use ethers_core::utils::hex::ToHexExt;
 use state::{ChainState, ETHEREUM_HOLESKY, POLYGON_AMOY};
-mod ether_utils;
 mod contracts;
 mod state;
+mod signer;
+mod provider;
 
 #[ic_cdk::update]
 async fn address() -> String {

@@ -1,10 +1,10 @@
 use std::rc::Rc;
 use ethers_core::abi::{Address, Contract, RawTopicFilter, Token};
-use crate::{ether_utils::Provider, include_abi};
+use crate::{provider::Provider, include_abi};
 use super::base::BaseContract;
 
 thread_local! {
-    static ABI: Rc<Contract> = Rc::new(include_abi!("./dvn.json"));
+    static ABI: Rc<Contract> = Rc::new(include_abi!("./abi/dvn.json"));
 }
 
 #[derive(Clone, Default)]
