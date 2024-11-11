@@ -1,13 +1,13 @@
 mod base;
+use std::rc::Rc;
 use base::BaseProvider;
 use ethers_core::{abi::Address, types::{transaction::eip2718::TypedTransaction, Eip1559TransactionRequest, Filter, Log, U256, U64}, utils::hex::ToHexExt};
-
 use crate::signer::Signer;
 
 #[derive(Clone, Default)]
 pub struct Provider {
     base: BaseProvider,
-    signer: Signer,
+    signer: Rc<Signer>,
     chain: u64
 }
 
@@ -15,14 +15,12 @@ impl Provider {
     pub fn new(url: String, chain: u64) -> Self {
         Self {
             base: BaseProvider::new(url),
-            signer: Signer::new("dfx_test_key".to_string()),
+            signer: Rc::new(Signer::new("dfx_test_key".to_string())),
             chain
         }
     }
 
-    pub async fn init(&mut self) {
-        self.signer.init().await;
-    }
+    pub async fn init(&mut self) {}
 
     pub async fn address(&self) -> Address {
         self.signer.address()

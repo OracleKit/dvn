@@ -6,6 +6,8 @@ mod contracts;
 mod state;
 mod signer;
 mod provider;
+mod chain;
+mod task;
 
 #[ic_cdk::update]
 async fn address() -> String {
