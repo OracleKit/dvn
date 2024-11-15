@@ -1,64 +1,66 @@
-use std::time::Duration;
+use std::{collections::HashMap, time::Duration};
 
 use ethers_core::utils::hex::ToHexExt;
-use state::{ChainState, ETHEREUM_HOLESKY, POLYGON_AMOY};
+use state::GlobalState;
+use task::Task;
+
 mod contracts;
 mod state;
 mod signer;
 mod provider;
 mod chain;
 mod task;
+mod transaction;
+mod nonce;
+mod gas;
 
-#[ic_cdk::update]
-async fn address() -> String {
-    let provider = POLYGON_AMOY.with_borrow(|state| state.provider.clone());
-    let address = provider.address().await.encode_hex_with_prefix();
-    address
+async fn _process_tasks() {
+    let num_chains = GlobalState::num_chains();
+    let mut tasks_by_chain: HashMap<u64, Vec<Task>> = HashMap::new();
+
+    for i in 0..num_chains {
+        let chain = GlobalState::chain(i);
+        let tasks = chain.borrow_mut().check_for_tasks().await;
+
+        for task in tasks {
+            let chain_id = task.dest_chain;
+            if let Some(tasks_list) = tasks_by_chain.get_mut(&chain_id) {
+                tasks_list.push(task);
+            } else {
+                tasks_by_chain.insert(chain_id, vec![task]);
+            }
+        }
+    }
+
+    for (chain_id, tasks) in tasks_by_chain.into_iter() {
+        let chain = GlobalState::chain_by_id(chain_id);
+        chain.borrow_mut().process_task(tasks).await;
+    }
 }
 
-async fn _process_jobs() {
-    let source_contract = ETHEREUM_HOLESKY.with_borrow(|state| state.dvn.clone());
-    let destination_contract = POLYGON_AMOY.with_borrow(|state| state.dvn.clone());
-    let last_processed_block = ETHEREUM_HOLESKY.with_borrow(|state| state.last_processed_block.clone());
-    let current_block = ETHEREUM_HOLESKY.with_borrow(|state| state.provider.clone()).get_current_block().await;
-    ETHEREUM_HOLESKY.with_borrow_mut(|state| state.last_processed_block = current_block.as_u64());
-
-    let jobs = source_contract.get_assigned_jobs(last_processed_block + 1).await;
-
-    ic_cdk::println!("Found {:?} jobs from blocks {:?} to {:?}", jobs.len(), last_processed_block + 1, current_block.as_u64());
-
-    for job in jobs.into_iter() {
-        ic_cdk::println!("Verifying job...");
-        destination_contract.verify(job).await;
-        ic_cdk::println!("Job verified!");
-    };
-}
-
 #[ic_cdk::update]
-async fn process_jobs() {
+async fn process_tasks() {
     ic_cdk::println!("{:?}", ic_cdk::api::instruction_counter());
-    _process_jobs().await;
+    _process_tasks().await;
     ic_cdk::println!("{:?}", ic_cdk::api::instruction_counter());
 }
 
 #[ic_cdk::update]
-async fn init_dvn() {
-    let mut state = ChainState::new(
-        env!("POLYGONAMOY_RPC_SSL_URL"),
-        env!("POLYGONAMOY_CHAIN_ID"),
-        env!("POLYGONAMOY_DVN_ADDRESS")
-    ).await;
-    POLYGON_AMOY.replace(state);
-
-    let mut state = ChainState::new(
-        env!("ETHEREUMHOLESKY_RPC_SSL_URL"),
-        env!("ETHEREUMHOLESKY_CHAIN_ID"),
-        env!("ETHEREUMHOLESKY_DVN_ADDRESS")
-    ).await;
-    ETHEREUM_HOLESKY.replace(state);
+async fn init() {
+    GlobalState::init().await;
 
     ic_cdk_timers::set_timer_interval(
         Duration::from_secs(30), 
-        || ic_cdk::spawn(_process_jobs())
+        || ic_cdk::spawn(_process_tasks())
     );
+}
+
+#[ic_cdk::update]
+async fn add_chain(rpc_url: String, chain_id: u64, dvn_address: String) {
+    GlobalState::add_chain(rpc_url, chain_id, dvn_address).await;
+}
+
+#[ic_cdk::update]
+async fn address() -> String {
+    GlobalState::signer().address().encode_hex_with_prefix()
 }

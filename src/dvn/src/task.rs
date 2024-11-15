@@ -1,14 +1,8 @@
-use ethers_core::types::Bytes;
+use ethers_core::abi::Token;
 
 pub struct Task {
-    src_chain: u64,
-    dest_chain: u64,
-    message: Bytes
-}
-
-impl Task {
-    // TODO: Add parsing from log in dvn contract
-    pub fn new(src_chain: u64, dest_chain: u64, message: Bytes) -> Self {
-        Self { src_chain, dest_chain, message }
-    }
+    #[allow(dead_code)]
+    pub src_chain: u64,
+    pub dest_chain: u64,
+    pub message: Token
 }

@@ -13,6 +13,7 @@ candid = "0.10"
 ethers-core = "2.0.14"
 ethers-providers = { version = "2.0.14", default-features = false }
 ethers-signers = "2.0.14"
+futures = "0.3.31"
 getrandom = { version = "0.2.15", features = ["custom"] }
 ic-cdk = "0.13"
 ic-cdk-timers = "0.7" # Feel free to remove this dependency if you don't need timers

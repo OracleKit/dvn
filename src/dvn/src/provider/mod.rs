@@ -1,77 +1,68 @@
 mod base;
-use std::rc::Rc;
 use base::BaseProvider;
-use ethers_core::{abi::Address, types::{transaction::eip2718::TypedTransaction, Eip1559TransactionRequest, Filter, Log, U256, U64}, utils::hex::ToHexExt};
-use crate::signer::Signer;
+use ethers_core::{abi::{Address, Topic, TopicFilter}, types::{BlockNumber, Bytes, Filter, FilterBlockOption, Log, ValueOrArray, H256, U256, U64}, utils::hex::ToHexExt};
+use crate::{gas::CurrentGasConfig, nonce::NonceConfig};
+
+pub struct LogFilter {
+    pub address: Address,
+    pub from: BlockNumber,
+    pub to: BlockNumber,
+    pub topics: TopicFilter
+}
 
 #[derive(Clone, Default)]
 pub struct Provider {
-    base: BaseProvider,
-    signer: Rc<Signer>,
-    chain: u64
+    base: BaseProvider
 }
 
 impl Provider {
-    pub fn new(url: String, chain: u64) -> Self {
+    pub fn new(url: String) -> Self {
         Self {
             base: BaseProvider::new(url),
-            signer: Rc::new(Signer::new("dfx_test_key".to_string())),
-            chain
         }
     }
 
-    pub async fn init(&mut self) {}
+    pub async fn block_number(&self) -> u64 {
+        let block_num: U64 = self.base.request("eth_blockNumber", [] as [u8; 0]).await;
+        block_num.as_u64()
+    }
 
-    pub async fn address(&self) -> Address {
-        self.signer.address()
+    pub async fn nonce(&self, account: &Address) -> NonceConfig {
+        let nonce: U256 = self.base.request("eth_getTransactionCount", (account.encode_hex_with_prefix(), "latest")).await;
+        NonceConfig { nonce }
+    }
+
+    pub async fn gas(&self) -> CurrentGasConfig {
+        let priority_fees: U256 = self.base.request("eth_maxPriorityFeePerGas", vec![] as Vec<u8>).await;
+        let base_fees: U256 = self.base.request("eth_gasPrice", vec![] as Vec<u8>).await;
+
+        CurrentGasConfig { base_fees, priority_fees }
+    }
+
+    pub async fn send(&self, txn: Bytes) -> String {
+        self.base.request("eth_sendRawTransaction", (txn, )).await
     }
     
-    pub async fn get_current_block(&self) -> U64 {
-        self.base.request("eth_blockNumber", [] as [u8; 0]).await
-    }
+    pub async fn logs(&self, filter: LogFilter) -> Vec<Log> {
+        let topic_parse_fn = |topic: Topic<H256>| -> Option<ValueOrArray<Option<H256>>> {
+            match topic {
+                Topic::This(h) => Some(ValueOrArray::Value(Some(h))),
+                Topic::Any => None,
+                _ => None
+            }
+        };
 
-    #[allow(dead_code)]
-    pub async fn get_balance(&self, account: &str) -> U256 {
-        self.base.request("eth_getBalance", (account, "latest")).await
-    }
+        let filter = Filter {
+            block_option: FilterBlockOption::Range { from_block: Some(filter.from), to_block: Some(filter.to) },
+            address: Some(ValueOrArray::Value(filter.address)),
+            topics: [
+                topic_parse_fn(filter.topics.topic0),
+                topic_parse_fn(filter.topics.topic1),
+                topic_parse_fn(filter.topics.topic2),
+                topic_parse_fn(filter.topics.topic3),
+            ]
+        };
 
-    pub async fn get_nonce(&self, account: &str) -> U256 {
-        self.base.request("eth_getTransactionCount", (account, "latest")).await
-    }
-
-    pub async fn get_current_priority_fees(&self) -> U256 {
-        self.base.request("eth_maxPriorityFeePerGas", vec![] as Vec<u8>).await
-    }
-
-    pub async fn get_current_base_fees(&self) -> U256 {
-        self.base.request("eth_gasPrice", vec![] as Vec<u8>).await
-    }
-
-    pub async fn send_transaction(&self, txn: Eip1559TransactionRequest) -> String {
-        let mut txn = txn;
-        let last_base_fee = self.get_current_base_fees().await;
-        let last_priority_fee = self.get_current_priority_fees().await;
-        
-        let base_fee = last_base_fee.checked_mul(11.into()).unwrap();
-        let base_fee = base_fee.checked_div(10.into()).unwrap();
-        let priority_fee = last_priority_fee;
-        let max_fee = base_fee.checked_add(priority_fee.clone()).unwrap();
-
-        txn.max_fee_per_gas = Some(max_fee);
-        txn.max_priority_fee_per_gas = Some(priority_fee);
-        txn.gas = Some(300_000.into());
-        txn.chain_id = Some(self.chain.into());
-        txn.from = Some(self.signer.address());
-        txn.nonce = Some(self.get_nonce(&self.signer.address().encode_hex_with_prefix()).await.into());
-
-        let txn: TypedTransaction = txn.into();
-
-        let signature = self.signer.sign_transaction(&txn).await;
-        let raw_signed = txn.rlp_signed(&signature);
-        self.base.request("eth_sendRawTransaction", (raw_signed, )).await
-    }
-
-    pub async fn get_logs(&self, filter: &Filter) -> Vec<Log> {
         self.base.request("eth_getLogs", [filter]).await
     }
 }
