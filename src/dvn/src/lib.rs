@@ -64,3 +64,5 @@ async fn add_chain(rpc_url: String, chain_id: u64, dvn_address: String) {
 async fn address() -> String {
     GlobalState::signer().address().encode_hex_with_prefix()
 }
+
+ic_cdk::export_candid!();
