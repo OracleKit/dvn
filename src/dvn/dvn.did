@@ -3,4 +3,5 @@ service : {
   address : () -> (text);
   init : () -> ();
   process_tasks : () -> ();
+  test : () -> (text);
 }
