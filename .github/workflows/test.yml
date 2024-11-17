@@ -54,6 +54,7 @@ jobs:
           yarn install --frozen-lockfile
           forge install
           yarn setup
+          cargo install candid-extractor
       
       - name: build contracts & canisters
         run: |

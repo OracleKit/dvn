@@ -1,5 +1,7 @@
 service : {
-    "process_jobs": () -> ();
-    "init_dvn": () -> ();
-    "address": () -> (text);
+  add_chain : (text, nat64, text) -> ();
+  address : () -> (text);
+  init : () -> ();
+  process_tasks : () -> ();
+  test : () -> (text);
 }

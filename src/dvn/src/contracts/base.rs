@@ -1,77 +1,22 @@
-use std::rc::Rc;
-use ethers_core::{abi::{self, Contract, Hash, Log, RawLog, RawTopicFilter, Token}, types::{self, transaction::eip2930::AccessList, Address, Bytes, Eip1559TransactionRequest, Filter, FilterBlockOption}};
-use crate::ether_utils::Provider;
+use ethers_core::{abi::{Contract, Log, RawLog, RawTopicFilter, Token, TopicFilter}, types::Bytes};
 
-#[derive(Clone, Default)]
-pub struct BaseContract {
-    provider: Provider,
-    address: Address,
-    abi: Rc<Contract>
-}
+pub struct BaseContract;
 
 impl BaseContract {
-    pub fn new(provider: Provider, address: Address, abi: Rc<Contract>) -> Self {
-        Self {
-            provider,
-            address,
-            abi
-        }
-    }
-
-    pub async fn write(&self, function_name: &str, args: &[Token]) -> String {
-        let function = &self.abi.functions_by_name(function_name).unwrap()[0];
+    pub fn function_data(abi: &Contract, function_name: &str, args: &[Token]) -> Bytes {
+        let function = &abi.functions_by_name(function_name).unwrap()[0];
         let data = function.encode_input(args).unwrap();
-        self.provider.send_transaction(Eip1559TransactionRequest {
-            chain_id: None,
-            from: None,
-            to: Some(ethers_core::types::NameOrAddress::Address(self.address.clone())),
-            gas: None,
-            value: None,
-            data: Some(Bytes::from(data)),
-            nonce: None,
-            access_list: AccessList::default(),
-            max_fee_per_gas: None,
-            max_priority_fee_per_gas: None
-        }).await
+        
+        Bytes::from(data)
     }
 
-    fn _abi_to_types_topic(&self, topic: abi::Topic<Hash>) -> types::Topic {
-        match topic {
-            abi::Topic::This(hash) => hash.into(),
-            _ => types::Topic::Value(None)
-        }
+    pub fn event_topic_filter(abi: &Contract, event_name: &str, topics: RawTopicFilter) -> TopicFilter {
+        let event = &abi.events_by_name(event_name).unwrap()[0];
+        event.filter(topics).unwrap()
     }
 
-    pub async fn events(&self, event_name: &str, topics: RawTopicFilter, from_block: Option<u64>) -> Vec<Log> {
-        let event = &self.abi.events_by_name(event_name).unwrap()[0];
-        let filter = event.filter(topics).unwrap();
-        let from_block = if let Some(block) = from_block {
-            Some(block.into())
-        } else { 
-            None
-        };
-
-        let logs = self.provider.get_logs(&Filter {
-            block_option: FilterBlockOption::Range { from_block, to_block: None },
-            address: Some(ethers_core::types::ValueOrArray::Value(self.address.clone())),
-            topics: [
-                Some(self._abi_to_types_topic(filter.topic0)),
-                None,
-                None,
-                None
-            ]
-        }).await;
-
-        let mut parsed_logs = vec![];
-        for log in logs.into_iter() {
-            let parsed_log = event.parse_log(RawLog {
-                topics: log.topics,
-                data: log.data.to_vec()
-            }).unwrap();
-
-            parsed_logs.push(parsed_log);
-        }
-
-        parsed_logs
+    pub fn event_parse_raw_log(abi: &Contract, event_name: &str, log: RawLog) -> Log {
+        let event = &abi.events_by_name(event_name).unwrap()[0];
+        event.parse_log(log).unwrap()
     }
 }
