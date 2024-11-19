@@ -5,15 +5,19 @@ import { ILayerZeroDVN } from "@layerzerolabs/lz-evm-messagelib-v2/contracts/uln
 import { ILayerZeroEndpointV2, Origin } from "@layerzerolabs/lz-evm-protocol-v2/contracts/interfaces/ILayerZeroEndpointV2.sol";
 import { PacketV1Codec } from "@layerzerolabs/lz-evm-protocol-v2/contracts/messagelib/libs/PacketV1Codec.sol";
 import { IReceiveUlnE2 } from "@layerzerolabs/lz-evm-messagelib-v2/contracts/uln/interfaces/IReceiveUlnE2.sol";
+import { ERC1967Utils } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Utils.sol";
+import { UUPSUpgradeable } from "@openzeppelin/contracts/proxy/utils/UUPSUpgradeable.sol";
 import "hardhat/console.sol";
 
-contract DVN is ILayerZeroDVN {
+contract DVN is ILayerZeroDVN, UUPSUpgradeable {
     using PacketV1Codec for bytes;
 
     address _endpoint;
     AssignJobParam[] test_Jobs;
 
     event JobAssigned(AssignJobParam params);
+    error Unauthorized();
+
 
     constructor(address endpoint_) {
         _endpoint = endpoint_;
@@ -63,5 +67,20 @@ contract DVN is ILayerZeroDVN {
 
     function _bytes32ToAddress(bytes32 _b) internal pure returns (address) {
         return address(uint160(uint256(_b)));
+    }
+
+    /** UUPS Proxy Functions */
+
+    modifier onlyAdmin() {
+        if ( msg.sender != ERC1967Utils.getAdmin() ) {
+            revert Unauthorized();
+        }
+        _;
+    }
+
+    function _authorizeUpgrade(address /*newImplementation*/) internal view override onlyAdmin {}
+
+    function changeAdmin(address newAdmin) external onlyProxy onlyAdmin {
+        ERC1967Utils.changeAdmin(newAdmin);
     }
 }
