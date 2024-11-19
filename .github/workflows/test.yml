@@ -16,7 +16,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ./.sink/bin
-          key: pocket-ic-cache-6.0.0
+          key: pocket-ic-cache-7.0.0
       
       - name: setup forge install cache
         uses: actions/cache@v4
