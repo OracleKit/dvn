@@ -13,47 +13,41 @@ contract DVN is ILayerZeroDVN, UUPSUpgradeable {
     using PacketV1Codec for bytes;
 
     address _endpoint;
-    AssignJobParam[] test_Jobs;
 
-    event JobAssigned(AssignJobParam params);
+    event TaskAssigned(
+        uint32 indexed dstEid,
+        uint64 indexed numConfirmations,
+        AssignJobParam task
+    );
+
     error Unauthorized();
 
-
-    constructor(address endpoint_) {
+    function setEndpoint(address endpoint_) external onlyProxy onlyAdmin {
         _endpoint = endpoint_;
     }
 
     function assignJob(
-        AssignJobParam calldata _param,
+        AssignJobParam calldata task_,
         bytes calldata /*_options*/
-    ) external payable returns (uint256) {
-        emit JobAssigned(_param);
+    ) external payable onlyProxy onlyEndpoint returns (uint256) {
+        emit TaskAssigned(task_.dstEid, task_.confirmations, task_);
         return 0;
     }
 
-    function verify(AssignJobParam calldata param_) external {
-        test_Jobs.push(param_); // only for testing
-        bytes calldata packetHeader_ = param_.packetHeader;
+    function verify(AssignJobParam calldata task_) external onlyProxy onlyAdmin {
+        bytes calldata packetHeader_ = task_.packetHeader;
         address receiver_ = _bytes32ToAddress(packetHeader_.receiver());
 
         (address receiveLibrary,)= ILayerZeroEndpointV2(_endpoint).getReceiveLibrary(receiver_, packetHeader_.dstEid());
-        IReceiveUlnE2(receiveLibrary).verify(packetHeader_, param_.payloadHash, param_.confirmations);
+        IReceiveUlnE2(receiveLibrary).verify(packetHeader_, task_.payloadHash, task_.confirmations);
     }
 
-    function verified(AssignJobParam calldata param_) external view returns (bool) {
-        bytes calldata packetHeader_ = param_.packetHeader;
+    function verified(AssignJobParam calldata task_) external view onlyProxy returns (bool) {
+        bytes calldata packetHeader_ = task_.packetHeader;
         address receiver_ = _bytes32ToAddress(packetHeader_.receiver());
 
         Origin memory origin_ = Origin(packetHeader_.srcEid(), packetHeader_.sender(), packetHeader_.nonce());
         return ILayerZeroEndpointV2(_endpoint).verifiable(origin_, receiver_);
-    }
-
-    function test_verifiedJobsNum() external view returns (uint) {
-        return test_Jobs.length;
-    }
-    
-    function test_verified(uint index) external view returns (bool) {
-        return this.verified(test_Jobs[index]);
     }
 
     function getFee(
@@ -69,6 +63,13 @@ contract DVN is ILayerZeroDVN, UUPSUpgradeable {
         return address(uint160(uint256(_b)));
     }
 
+    modifier onlyEndpoint() {
+        if ( msg.sender != _endpoint ) {
+            revert Unauthorized();
+        }
+        _;
+    }
+
     /** UUPS Proxy Functions */
 
     modifier onlyAdmin() {
@@ -80,7 +81,7 @@ contract DVN is ILayerZeroDVN, UUPSUpgradeable {
 
     function _authorizeUpgrade(address /*newImplementation*/) internal view override onlyAdmin {}
 
-    function changeAdmin(address newAdmin) external onlyProxy onlyAdmin {
+    function setAdmin(address newAdmin) external onlyProxy onlyAdmin {
         ERC1967Utils.changeAdmin(newAdmin);
     }
 }
