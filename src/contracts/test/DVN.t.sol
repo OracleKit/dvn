@@ -10,6 +10,9 @@ import { PacketV1Codec } from "@layerzerolabs/lz-evm-protocol-v2/contracts/messa
 import { ILayerZeroDVN } from "@layerzerolabs/lz-evm-messagelib-v2/contracts/uln/interfaces/ILayerZeroDVN.sol";
 import { ERC1967Utils } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Utils.sol";
 import { IERC1967 } from "@openzeppelin/contracts/interfaces/IERC1967.sol";
+import { ILayerZeroEndpointV2, Origin } from "@layerzerolabs/lz-evm-protocol-v2/contracts/interfaces/ILayerZeroEndpointV2.sol";
+import { IMessageLibManager } from "@layerzerolabs/lz-evm-protocol-v2/contracts/interfaces/IMessageLibManager.sol";
+import { IReceiveUlnE2 } from "@layerzerolabs/lz-evm-messagelib-v2/contracts/uln/interfaces/IReceiveUlnE2.sol";
 
 abstract contract Helper {
     DVN _dvn;
@@ -34,6 +37,10 @@ abstract contract Helper {
         task.sender = packet.sender;
 
         return task;
+    }
+
+    function getSampleOrigin() internal view returns (Origin memory) {
+        return Origin(1, AddressCast.toBytes32(address(this)), 0);
     }
 }
 
@@ -129,6 +136,40 @@ contract DVNTest is Test, Helper {
         _dvnBehindProxy.upgradeToAndCall(newImplementation, "");
     }
 
+    function test_upgrade_SuccessfullyUpgrades() public {
+        DVN newDVN = new DVN();
+
+        address implementation = AddressCast.toAddress(
+            vm.load(
+                address(_dvnBehindProxy),
+                _dvn.proxiableUUID()
+            )
+        );
+        assertEq(implementation, address(_dvn));
+
+        _dvnBehindProxy.upgradeToAndCall(address(newDVN), "");
+
+        implementation = AddressCast.toAddress(
+            vm.load(
+                address(_dvnBehindProxy),
+                _dvn.proxiableUUID()
+            )
+        );
+        assertEq(implementation, address(newDVN));
+    }
+
+    function test_upgrade_AdminStaysIntactAfterUpgrade() public {
+        address testAdmin = makeAddr("test");
+        DVN newDVN = new DVN();
+
+        _dvnBehindProxy.setAdmin(testAdmin);
+        vm.prank(testAdmin);
+        _dvnBehindProxy.upgradeToAndCall(address(newDVN), "");
+
+        address admin = _dvnBehindProxy.getAdmin();
+        assertEq(admin, testAdmin);
+    }
+
     function test_assign_RevertIf_UnauthorizedAssignAttempt() public {
         address endpoint = makeAddr("endpoint");
         _dvnBehindProxy.setEndpoint(endpoint);
@@ -137,7 +178,7 @@ contract DVNTest is Test, Helper {
         _dvnBehindProxy.assignJob(getSampleTask(), "");
     }
 
-    function test_assign_SuccessfulAssignAttempt() public {
+    function test_assign_SuccessfulAssign() public {
         address endpoint = makeAddr("endpoint");
         _dvnBehindProxy.setEndpoint(endpoint);
 
@@ -157,5 +198,63 @@ contract DVNTest is Test, Helper {
         vm.prank(pranker);
         vm.expectRevert(DVN.Unauthorized.selector);
         _dvnBehindProxy.verify(task);
+    }
+
+    function test_verify_SuccessfulVerify() public {
+        address endpoint = makeAddr("endpoint");
+        address receiverLib = makeAddr("receiverLib");
+        ILayerZeroDVN.AssignJobParam memory task = getSampleTask();
+
+        _dvnBehindProxy.setEndpoint(endpoint);
+
+        vm.mockCall(endpoint, abi.encodeWithSelector(IMessageLibManager.getReceiveLibrary.selector), abi.encode(receiverLib, false));
+        vm.mockCall(receiverLib, abi.encodeWithSelector(IReceiveUlnE2.verify.selector), "");
+
+        vm.expectCall(
+            endpoint,
+            abi.encodeWithSelector(
+                IMessageLibManager.getReceiveLibrary.selector,
+                address(this),
+                task.dstEid
+            )
+        );
+
+        vm.expectCall(
+            receiverLib,
+            abi.encodeWithSelector(
+                IReceiveUlnE2.verify.selector,
+                task.packetHeader,
+                task.payloadHash,
+                task.confirmations
+            )
+        );
+
+        _dvnBehindProxy.verify(task);
+    }
+
+    function test_verified_Success() public {
+        address endpoint = makeAddr("endpoint");
+        ILayerZeroDVN.AssignJobParam memory task = getSampleTask();
+        Origin memory origin = getSampleOrigin();
+
+        _dvnBehindProxy.setEndpoint(endpoint);
+        vm.mockCall(endpoint, abi.encodeWithSelector(ILayerZeroEndpointV2.verifiable.selector), abi.encode(true));
+
+        vm.expectCall(
+            endpoint,
+            abi.encodeWithSelector(
+                ILayerZeroEndpointV2.verifiable.selector,
+                origin,
+                address(this)
+            )
+        );
+
+        bool verified = _dvnBehindProxy.verified(task);
+        assertEq(verified, true);
+    }
+
+    function test_fees_ShouldBeZero() public view {
+        uint256 fees = _dvnBehindProxy.getFee(0, 0, address(this), "");
+        assertEq(fees, 0);
     }
 }
