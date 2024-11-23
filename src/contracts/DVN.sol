@@ -22,8 +22,38 @@ contract DVN is ILayerZeroDVN, UUPSUpgradeable {
 
     error Unauthorized();
 
+    modifier onlyAdmin() {
+        if ( msg.sender != ERC1967Utils.getAdmin() ) {
+            revert Unauthorized();
+        }
+        _;
+    }
+
+    modifier onlyEndpoint() {
+        if ( msg.sender != _endpoint ) {
+            revert Unauthorized();
+        }
+        _;
+    }
+
+    function setAdmin(address newAdmin) external onlyProxy onlyAdmin {
+        ERC1967Utils.changeAdmin(newAdmin);
+    }
+
+    function getAdmin() external view onlyProxy returns (address) {
+        return ERC1967Utils.getAdmin();
+    }
+
     function setEndpoint(address endpoint_) external onlyProxy onlyAdmin {
         _endpoint = endpoint_;
+    }
+
+    function getEndpoint() external view onlyProxy returns (address) {
+        return _endpoint;
+    }
+
+    function _bytes32ToAddress(bytes32 _b) internal pure returns (address) {
+        return address(uint160(uint256(_b)));
     }
 
     function assignJob(
@@ -59,29 +89,7 @@ contract DVN is ILayerZeroDVN, UUPSUpgradeable {
         return 0;
     }
 
-    function _bytes32ToAddress(bytes32 _b) internal pure returns (address) {
-        return address(uint160(uint256(_b)));
-    }
-
-    modifier onlyEndpoint() {
-        if ( msg.sender != _endpoint ) {
-            revert Unauthorized();
-        }
-        _;
-    }
-
     /** UUPS Proxy Functions */
 
-    modifier onlyAdmin() {
-        if ( msg.sender != ERC1967Utils.getAdmin() ) {
-            revert Unauthorized();
-        }
-        _;
-    }
-
     function _authorizeUpgrade(address /*newImplementation*/) internal view override onlyAdmin {}
-
-    function setAdmin(address newAdmin) external onlyProxy onlyAdmin {
-        ERC1967Utils.changeAdmin(newAdmin);
-    }
 }
