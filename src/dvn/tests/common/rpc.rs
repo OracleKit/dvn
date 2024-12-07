@@ -1,13 +1,13 @@
 use std::borrow::Borrow;
 
-use ethers_core::{abi::AbiEncode, types::{transaction::eip2718::TypedTransaction, Bytes, Eip1559TransactionRequest, Filter, NameOrAddress, Signature}, utils::rlp::Rlp};
-use pocket_ic::common::rest::{CanisterHttpMethod, CanisterHttpReply, CanisterHttpRequest, CanisterHttpResponse};
+use ethers_core::{abi::AbiEncode, types::{transaction::eip2718::TypedTransaction, Address, Bytes, Eip1559TransactionRequest, Filter, NameOrAddress, Signature}, utils::rlp::Rlp};
+use pocket_ic::{common::rest::{CanisterHttpMethod, CanisterHttpReply, CanisterHttpRequest, CanisterHttpResponse, MockCanisterHttpResponse}, PocketIc};
 use serde::{Deserialize, Serialize};
 use serde_json::value::RawValue;
 
-use super::{ChainStateMachine, ChainStateMachineFactory};
+use super::{utils::encode_hex, ChainStateMachine, ChainStateMachineFactory};
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone)]
 pub enum RpcRequest {
     BlockNumber,
     ChainId,
@@ -18,6 +18,21 @@ pub enum RpcRequest {
     SendRawTransaction((Eip1559TransactionRequest, Signature))
 }
 
+impl RpcRequest {
+    pub fn as_u64(&self) -> u64 {
+        match self {
+            RpcRequest::BlockNumber => 0,
+            RpcRequest::ChainId => 1,
+            RpcRequest::GasPrice => 2,
+            RpcRequest::GetLogs(_) => 3,
+            RpcRequest::GetTransactionCount => 4,
+            RpcRequest::MaxPriorityFeePerGas => 5,
+            RpcRequest::SendRawTransaction(_) => 6
+        }
+    }
+}
+
+#[derive(Clone)]
 pub struct ParsedRpcRequest {
     pub id: u64,
     pub url: String,
@@ -96,17 +111,17 @@ fn parse_txn(raw_txn: &Bytes, state_machine: &ChainStateMachine) -> Result<(Eip1
     Ok((txn, signature))
 }
 
-pub fn parse_rpc_request(req: CanisterHttpRequest, state_machine_factory: &ChainStateMachineFactory) -> Result<ParsedRpcRequest, RpcParseError> {
+pub fn parse_rpc_request(req: &CanisterHttpRequest, state_machine_factory: &ChainStateMachineFactory) -> Result<ParsedRpcRequest, RpcParseError> {
     let id = req.request_id;
-    let url = req.url;
-    let method = req.http_method;
-    let data = req.body;
+    let url = &req.url;
+    let method = &req.http_method;
+    let data = &req.body;
 
     let Some(state_machine) =  state_machine_factory.get(&url) else {
         return Err(RpcParseError::InvalidRpcUrl);
     };
 
-    if method != CanisterHttpMethod::POST {
+    if method != &CanisterHttpMethod::POST {
         return Err(RpcParseError::InvalidHttpMethod);
     }
 
@@ -135,11 +150,19 @@ pub fn parse_rpc_request(req: CanisterHttpRequest, state_machine_factory: &Chain
         },
 
         "eth_getTransactionCount" => {
-            if parsed_req.params.is_some() {
+            if let Some(params) = parsed_req.params {
+                let Ok(parsed_params) = serde_json::from_str::<(Address, String)>(params.get()) else {
+                    return Err(RpcParseError::InvalidParams);
+                };
+
+                if parsed_params.0 != state_machine.sender() || parsed_params.1 != "latest" {
+                    return Err(RpcParseError::InvalidParams);
+                }
+
+                RpcRequest::GetTransactionCount
+            } else {
                 return Err(RpcParseError::FoundParams);
             }
-            
-            RpcRequest::GetTransactionCount
         },
 
         "eth_gasPrice" => {
@@ -193,7 +216,7 @@ pub fn parse_rpc_request(req: CanisterHttpRequest, state_machine_factory: &Chain
     Ok(
         ParsedRpcRequest {
             id,
-            url,
+            url: url.clone(),
             rpc_id: parsed_req.id,
             data: rpc_data
         }
@@ -211,26 +234,26 @@ pub fn process_rpc_request(req: &ParsedRpcRequest, state_machine_factory: &mut C
 
     match &req.data {
         RpcRequest::BlockNumber => {
-            let block_number = state_machine.block_number().encode_hex();
+            let block_number = encode_hex(state_machine.block_number().as_u64());
             result = serialize_interm(&block_number);
         },
         RpcRequest::ChainId => {
-            let chain_id = state_machine.chain_id().encode_hex();
+            let chain_id = encode_hex(state_machine.chain_id());
             result = serialize_interm(&chain_id);
         },
         RpcRequest::GetTransactionCount => {
-            let nonce = state_machine.transaction_count().encode_hex();
+            let nonce = encode_hex(state_machine.transaction_count());
             result = serialize_interm(&nonce);
         },
         RpcRequest::GasPrice => {
             let base_fees = state_machine.base_gas();
             let priority_fees = state_machine.priority_gas();
             let gas_price = base_fees.checked_add(priority_fees).unwrap();
-            result = serialize_interm(&gas_price.encode_hex());
+            result = serialize_interm(&encode_hex(gas_price.as_u128()));
         },
         RpcRequest::MaxPriorityFeePerGas => {
             let priority_fees = state_machine.priority_gas();
-            result = serialize_interm(&priority_fees.encode_hex());
+            result = serialize_interm(&encode_hex(priority_fees.as_u128()));
         },
         RpcRequest::GetLogs(filter) => {
             let logs = state_machine.get_logs(filter);
@@ -253,4 +276,51 @@ pub fn process_rpc_request(req: &ParsedRpcRequest, state_machine_factory: &mut C
         headers: vec![],
         body: serialized_response
     })
+}
+
+pub struct RequestCollection {
+    requests: Vec<ParsedRpcRequest>
+}
+
+impl RequestCollection {
+    pub fn new() -> Self {
+        Self { requests: vec![] }
+    }
+
+    pub fn add_request(&mut self, request: ParsedRpcRequest) {
+        self.requests.push(request);
+    }
+
+    pub fn filter_by_rpc(&self, rpc_url: &str) -> Vec<&ParsedRpcRequest> {
+        self.requests.iter().filter(|&request| &request.url == rpc_url).collect()
+    }
+}
+
+
+pub fn rpc_request_loop(pic: &PocketIc, state_machine_factory: &mut ChainStateMachineFactory) -> Result<RequestCollection, RpcParseError>  {
+    let mut request_collection = RequestCollection::new();
+    
+    loop {
+        pic.tick(); pic.tick();
+
+        let requests = pic.get_canister_http();
+        if requests.len() == 0 { break; }
+        
+        for request in requests {
+            let parsed_request = parse_rpc_request(&request, state_machine_factory)?;
+            request_collection.add_request(parsed_request.clone());
+
+            let response = process_rpc_request(&parsed_request, state_machine_factory);
+            pic.mock_canister_http_response(MockCanisterHttpResponse {
+                subnet_id: request.subnet_id,
+                request_id: request.request_id,
+                response,
+                additional_responses: vec![]
+            });
+        }
+
+        pic.tick(); pic.tick();
+    }
+
+    return Ok(request_collection);
 }

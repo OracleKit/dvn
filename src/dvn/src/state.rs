@@ -9,7 +9,7 @@ pub struct GlobalState;
 
 impl GlobalState {
     pub async fn init() {
-        let mut signer = Signer::new("test_key".to_string());
+        let mut signer = Signer::new("test_key_1".to_string());
         signer.init().await;
         
         SIGNER.replace(Rc::new(signer));

@@ -5,3 +5,4 @@ mod utils;
 
 pub use setup::*;
 pub use chain::*;
+pub use rpc::*;

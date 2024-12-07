@@ -24,16 +24,17 @@ impl ChainStateMachineFactory {
         }
     }
 
-    pub fn create(&mut self) -> &ChainStateMachine {
+    pub fn create(&mut self) -> &mut ChainStateMachine {
         let machine = ChainStateMachine::new(
-            self.chains.len().try_into().unwrap(),
             self.chains.len().try_into().unwrap(),
             self.sender.clone(),
             self.contract.clone()
         );
 
         self.chains.push(machine);
-        &self.chains[self.chains.len() - 1]
+        
+        let last_chain_index = self.chains.len() - 1;
+        &mut self.chains[last_chain_index]
     }
 
     pub fn get(&self, url: &str) -> Option<&ChainStateMachine> {
@@ -61,6 +62,7 @@ impl ChainStateMachineFactory {
 pub struct ChainStateMachine {
     url: String,
     chain_id: u64,
+    endpoint_id: u64,
     base_gas: U256,
     priority_gas: U256,
     nonce: U256,
@@ -74,10 +76,11 @@ pub struct ChainStateMachine {
 }
 
 impl ChainStateMachine {
-    pub fn new(port: u64, chain_id: u64, sender: Address, contract: Address) -> Self {
+    pub fn new(offset: u64, sender: Address, contract: Address) -> Self {
         Self {
-            url: format!("https://localhost:{}/", port.to_string()),
-            chain_id,
+            url: format!("https://localhost:{}/", (9000 + offset).to_string()),
+            chain_id: offset,
+            endpoint_id: 70000 + offset,
             base_gas: U256::from(100),
             priority_gas: U256::from(100),
             nonce: U256::from(0),
@@ -99,6 +102,10 @@ impl ChainStateMachine {
 
     pub fn chain_id(&self) -> u64 {
         self.chain_id
+    }
+
+    pub fn endpoint_id(&self) -> u64 {
+        self.endpoint_id
     }
 
     pub fn base_gas(&self) -> U256 {

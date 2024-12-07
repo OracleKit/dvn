@@ -1,7 +1,6 @@
 service : {
   add_chain : (text, nat64, text) -> ();
-  address : () -> (text);
+  address : () -> (text) query;
   init : () -> ();
   process_tasks : () -> ();
-  test : () -> (text);
 }

@@ -60,7 +60,7 @@ async fn add_chain(rpc_url: String, chain_id: u64, dvn_address: String) {
     GlobalState::add_chain(rpc_url, chain_id, dvn_address).await;
 }
 
-#[ic_cdk::update]
+#[ic_cdk::query]
 async fn address() -> String {
     GlobalState::signer().address().encode_hex_with_prefix()
 }
