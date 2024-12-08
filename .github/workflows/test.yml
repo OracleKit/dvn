@@ -68,3 +68,7 @@ jobs:
       - name: run dvn canister tests
         run: |
           yarn test:dvn
+      
+      - name: run e2e tests
+        run: |
+          yarn test:e2e

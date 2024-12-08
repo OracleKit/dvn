@@ -33,6 +33,7 @@ pub fn submit_setup_chain_call(pic: &PocketIc, canister: Principal, chain: &Chai
         encode_args((
             chain.url(),
             chain.chain_id(),
+            chain.endpoint_id(),
             chain.contract().as_bytes().encode_hex::<String>()
         )).unwrap()
     ).unwrap()
