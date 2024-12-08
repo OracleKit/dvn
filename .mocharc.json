@@ -1,4 +1,5 @@
 {
     "extension": ["ts"],
-    "spec": "test/dvn/*.test.ts"
+    "spec": "test/dvn/*.test.ts",
+    "node-option": ["import=tsx"]
 }

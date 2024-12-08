@@ -1,41 +1,46 @@
 source $DIRNAME/log.bash
 source $DIRNAME/common.bash
 
-LOG_FILE_DFX=$(pretty_log_file dfx)
+DFX_LOG_FILE=$(pretty_log_file dfx)
 
-function _pretty_log_term_dfx {
+function _dfx_pretty_log_term {
     pretty_log_term dfx
 }
 
-function _wait_for_dfx_start {
-    until grep "Dashboard" $LOG_FILE_DFX >/dev/null 2>&1; do
+function _dfx_wait_for_start {
+    until grep "Dashboard" $DFX_LOG_FILE >/dev/null 2>&1; do
         sleep .1
     done
 }
 
 # Usage: [PORT]
-function start_dfx {
+function dfx_start {
     port=$1
-    echo "Starting local network..." | _pretty_log_term_dfx
+    echo "Starting local network..." | _dfx_pretty_log_term
     dfx stop >/dev/null 2>&1
-    dfx start --clean >$LOG_FILE_DFX --host "0.0.0.0:$port" 2>&1 &
+    dfx start --clean >$DFX_LOG_FILE --host "0.0.0.0:$port" 2>&1 &
     
-    _wait_for_dfx_start
-    tail -n0 -f $LOG_FILE_DFX | _pretty_log_term_dfx &
-    echo "Local network started" | _pretty_log_term_dfx
+    _dfx_wait_for_start
+    tail -n0 -f $DFX_LOG_FILE | _dfx_pretty_log_term &
+    echo "Local network started" | _dfx_pretty_log_term
 }
 
-function deploy_dvn {
+function dfx_deploy_dvn {
     dfx deploy dvn 2>&1
-    dfx canister call dvn init_dvn 2>&1
+    dfx canister call dvn init 2>&1
 }
 
-function get_dvn_address {
+function dfx_get_dvn_address {
     dfx canister call dvn address | awk -F'"' '{ print $2 }'
 }
 
+# Usage: [RPC_URL] [CHAIN_ID] [ENDPOINT_ID] [DVN_ADDRESS]
+function dfx_add_dvn_chain {
+    dfx canister call dvn add_chain "(\"$1\", $2, $3, \"$4\")"
+}
+
 # Installs to $SINK_BIN_DIR/pocket-ic
-function setup_pocketic_bin {
+function dfx_setup_pocketic_bin {
     cd $SINK_BIN_DIR
     rm -r $SINK_BIN_DIR/pocket-ic 2>/dev/null || true
     

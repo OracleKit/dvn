@@ -1,25 +1,48 @@
 import { assert } from "chai";
-import { PocketIc, Actor } from "@hadronous/pic";
-import { idlFactory, type _SERVICE } from "./declarations/dvn/dvn.did";
-import { Principal } from "@dfinity/principal";
+import { getProvider } from "../../src/utils/provider";
+import { getContract } from "../../src/utils/evm";
 
 describe("DVN", function() {
-    let pic: PocketIc;
-    let dvnCanisterId: Principal;
-    let dvn: Actor<_SERVICE>;
+    it("E2E Test", async function() {
+        this.timeout(60000);
 
-    beforeEach(async () => {
-        pic = await PocketIc.create(process.env.POCKET_IC_URL!);
-        const fixture = await pic.setupCanister<_SERVICE>({
-            idlFactory: idlFactory,
-            wasm: "./.dfx/local/canisters/dvn/dvn.wasm"
+        const srcChainName = process.env.SOURCE_CHAIN_NAME!;
+        const destChainName = process.env.DESTINATION_CHAIN_NAME!;
+        console.log(srcChainName, destChainName);
+
+        assert(srcChainName, "Source chain env present");
+        assert(destChainName, "Destination chain env present");
+
+        const srcProvider = getProvider(srcChainName);
+        const destProvider = getProvider(destChainName);
+
+        const srcBlockNum = await srcProvider.wallet.getBlockNumber();        
+        const srcDvn = await getContract(srcProvider, "DVN", srcProvider.dvn!);
+        const srcOapp = await getContract(srcProvider, "MockOApp", srcProvider.mockApp!);
+        const destDvn = await getContract(destProvider, "DVN", destProvider.dvn!);
+        const destOapp = await getContract(destProvider, "MockOApp", destProvider.mockApp!);
+
+        console.log(await srcOapp.read.peers([destProvider.eid]), destOapp.address);
+        const fees = await srcOapp.read.quote([destProvider.eid, "Helllo"]);
+
+        await srcProvider.wallet.waitForTransactionReceipt({
+            hash: (await srcOapp.write.send([destProvider.eid, ""], {
+                value: fees.nativeFee + 1000n
+            }))
         });
 
-        dvnCanisterId = fixture.canisterId;
-        dvn = fixture.actor;
-    });
+        const events = await srcDvn.getEvents.TaskAssigned({}, {
+            fromBlock: srcBlockNum,
+            toBlock: 'latest'
+        });
 
-    it("Testing if deployed", function() {
-        assert(dvnCanisterId, "DVN deployed");
+        assert(events.length == 1, "Tasks assigned");
+
+        await new Promise<void>((resolve, reject) => {
+            setTimeout(() => resolve(), 35000)
+        });
+
+        const received = await destDvn.read.verified([events[0].args.task!])
+        assert(received, "Tasks received");
     });
 });

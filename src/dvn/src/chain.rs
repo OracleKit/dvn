@@ -4,6 +4,7 @@ use std::{rc::Rc, str::FromStr};
 
 pub struct ChainState {
     pub chain_id: u64,
+    pub endpoint_id: u64,
     provider: Provider,
     dvn: DVN,
     gas: GasManager,
@@ -13,9 +14,8 @@ pub struct ChainState {
 }
 
 impl ChainState {
-    pub fn new(rpc_url: &str, chain_id: u64, dvn_address: &str) -> Self {
+    pub fn new(rpc_url: &str, chain_id: u64, endpoint_id: u64, dvn_address: &str) -> Self {
         let provider = Provider::new(rpc_url.to_string());
-        ic_cdk::println!("{:?}", dvn_address);
         let dvn = DVN::new(Address::from_str(dvn_address).unwrap(), chain_id);
         let gas = GasManager::new();
         let nonce = NonceManager::new();
@@ -23,6 +23,7 @@ impl ChainState {
 
         Self {
             chain_id,
+            endpoint_id,
             provider,
             dvn,
             gas,

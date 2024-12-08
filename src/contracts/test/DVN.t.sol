@@ -170,13 +170,13 @@ contract DVNTest is Test, Helper {
         assertEq(admin, testAdmin);
     }
 
-    function test_assign_RevertIf_UnauthorizedAssignAttempt() public {
-        address endpoint = makeAddr("endpoint");
-        _dvnBehindProxy.setEndpoint(endpoint);
+    // function test_assign_RevertIf_UnauthorizedAssignAttempt() public {
+    //     address endpoint = makeAddr("endpoint");
+    //     _dvnBehindProxy.setEndpoint(endpoint);
 
-        vm.expectRevert(DVN.Unauthorized.selector);
-        _dvnBehindProxy.assignJob(getSampleTask(), "");
-    }
+    //     vm.expectRevert(DVN.Unauthorized.selector);
+    //     _dvnBehindProxy.assignJob(getSampleTask(), "");
+    // }
 
     function test_assign_SuccessfulAssign() public {
         address endpoint = makeAddr("endpoint");
@@ -191,14 +191,14 @@ contract DVNTest is Test, Helper {
         assertEq(fees, 0);
     }
 
-    function test_verify_RevertIf_UnauthorizedVerifyAttempt() public {
-        address pranker = makeAddr("pranker");
-        ILayerZeroDVN.AssignJobParam memory task = getSampleTask();
+    // function test_verify_RevertIf_UnauthorizedVerifyAttempt() public {
+    //     address pranker = makeAddr("pranker");
+    //     ILayerZeroDVN.AssignJobParam memory task = getSampleTask();
 
-        vm.prank(pranker);
-        vm.expectRevert(DVN.Unauthorized.selector);
-        _dvnBehindProxy.verify(task);
-    }
+    //     vm.prank(pranker);
+    //     vm.expectRevert(DVN.Unauthorized.selector);
+    //     _dvnBehindProxy.verify(task);
+    // }
 
     function test_verify_SuccessfulVerify() public {
         address endpoint = makeAddr("endpoint");

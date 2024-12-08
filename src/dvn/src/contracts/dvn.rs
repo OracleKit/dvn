@@ -24,7 +24,7 @@ impl DVN {
 
     pub fn jobs_filter(&self, from_block: BlockNumber, to_block: BlockNumber) -> LogFilter {
         ABI.with(|abi| {
-            let topic_filter = BaseContract::event_topic_filter(abi, "AssignedJobs", RawTopicFilter {
+            let topic_filter = BaseContract::event_topic_filter(abi, "TaskAssigned", RawTopicFilter {
                 topic0: ethers_core::abi::Topic::Any,
                 topic1: ethers_core::abi::Topic::Any,
                 topic2: ethers_core::abi::Topic::Any
@@ -41,7 +41,7 @@ impl DVN {
 
     pub fn jobs_parse(&self, log: Log) -> Task  {
         ABI.with(|abi| {
-            let parsed_log = BaseContract::event_parse_raw_log(abi, "event_name", RawLog {
+            let parsed_log = BaseContract::event_parse_raw_log(abi, "TaskAssigned", RawLog {
                 data: log.data.to_vec(),
                 topics: log.topics
             });
@@ -55,7 +55,7 @@ impl DVN {
                     }
                 }
 
-                if param.name.as_str() == "param" {
+                if param.name.as_str() == "task" {
                     message = Some(param.value);
                 }
             }
@@ -72,7 +72,7 @@ impl DVN {
         ABI.with(|abi| {
             let data = BaseContract::function_data(
                 abi,
-                "function_name", 
+                "verify", 
                 &[job.message]
             );
 

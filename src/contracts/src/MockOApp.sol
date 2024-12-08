@@ -8,6 +8,7 @@ import { OAppCore } from "@layerzerolabs/oapp-evm/contracts/oapp/OAppCore.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { SetConfigParam } from "@layerzerolabs/lz-evm-protocol-v2/contracts/interfaces/IMessageLibManager.sol";
 import { UlnConfig } from "@layerzerolabs/lz-evm-messagelib-v2/contracts/uln/UlnBase.sol";
+import "hardhat/console.sol";
 
 contract MockOApp is OAppSender, OAppReceiver {
     using OptionsBuilder for bytes;

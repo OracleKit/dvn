@@ -9,7 +9,7 @@ pub struct GlobalState;
 
 impl GlobalState {
     pub async fn init() {
-        let mut signer = Signer::new("test_key_1".to_string());
+        let mut signer = Signer::new("dfx_test_key".to_string());
         signer.init().await;
         
         SIGNER.replace(Rc::new(signer));
@@ -27,10 +27,10 @@ impl GlobalState {
         })
     }
 
-    pub fn chain_by_id(chain_id: u64) -> Rc<RefCell<ChainState>> {
+    pub fn chain_by_id(id: u64) -> Rc<RefCell<ChainState>> {
         CHAINS.with(|chains| {
             let chains = chains.borrow();
-            let chain = chains.iter().find(|chain| chain.borrow().chain_id == chain_id).unwrap();
+            let chain = chains.iter().find(|chain| chain.borrow().endpoint_id == id).unwrap();
             Rc::clone(chain)
         })
     }
@@ -41,8 +41,8 @@ impl GlobalState {
         })
     }
 
-    pub async fn add_chain(rpc_url: String, chain_id: u64, dvn_address: String) -> usize {
-        let mut new_chain = ChainState::new(&rpc_url, chain_id, &dvn_address);
+    pub async fn add_chain(rpc_url: String, chain_id: u64, endpoint_id: u64, dvn_address: String) -> usize {
+        let mut new_chain = ChainState::new(&rpc_url, chain_id, endpoint_id, &dvn_address);
         new_chain.init().await;
 
         CHAINS.with(|chains| {
