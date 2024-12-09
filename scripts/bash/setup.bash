@@ -17,5 +17,4 @@ if [ ! -f $SINK_BIN_DIR/pocket-ic ]; then
 fi
 
 cat .env.template | sed "s/##ALCHEMY_API_KEY##/$alchemy_api_key/g" > .env.local
-ls
 exit 2
