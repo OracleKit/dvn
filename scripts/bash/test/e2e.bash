@@ -62,6 +62,9 @@ src_chain_oapp_address=$(eth_get_chain_env $src_chain_name_caps "OAPP_ADDRESS")
 dest_chain_dvn_address=$(eth_get_chain_env $dest_chain_name_caps "DVN_ADDRESS")
 dest_chain_oapp_address=$(eth_get_chain_env $dest_chain_name_caps "OAPP_ADDRESS")
 
+cat $SINK_LOGS_DIR/*
+curl $src_chain_rpc_ssl_url || cat $SINK_LOGS_DIR/*
+
 # start chains
 dfx_start $BASE_PORT
 dfx_deploy_dvn
