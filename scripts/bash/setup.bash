@@ -16,4 +16,8 @@ if [ ! -f $SINK_BIN_DIR/pocket-ic ]; then
     dfx_setup_pocketic_bin
 fi
 
+# Generate .env.local
 cat .env.template | sed "s/##ALCHEMY_API_KEY##/$alchemy_api_key/g" > .env.local
+
+# Generate certs for local ssl proxy
+mkcert localhost
