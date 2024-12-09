@@ -33,7 +33,6 @@ admin_wallet=$(eth_new_wallet)
 admin_address=$(echo $admin_wallet | awk -F' ' '{ print $1 }')
 admin_private_key=$(echo $admin_wallet | awk -F' ' '{ print $2 }')
 
-dfx_start $BASE_PORT
 
 # setup chains
 eth_start_chain $src_chain_name $(( BASE_PORT + 1 ))
@@ -64,6 +63,7 @@ dest_chain_dvn_address=$(eth_get_chain_env $dest_chain_name_caps "DVN_ADDRESS")
 dest_chain_oapp_address=$(eth_get_chain_env $dest_chain_name_caps "OAPP_ADDRESS")
 
 # start chains
+dfx_start $BASE_PORT
 dfx_deploy_dvn
 dfx_add_dvn_chain $src_chain_rpc_ssl_url $src_chain_id $src_chain_eid $src_chain_dvn_address
 dfx_add_dvn_chain $dest_chain_rpc_ssl_url $dest_chain_id $dest_chain_eid $dest_chain_dvn_address

@@ -9,7 +9,6 @@ function dfx_pretty_log_term {
 
 function dfx_wait_for_start {
     until grep "Dashboard" $DFX_LOG_FILE >/dev/null 2>&1; do
-        cat $DFX_LOG_FILE
         sleep .1
     done
 }

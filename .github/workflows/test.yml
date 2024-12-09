@@ -37,6 +37,8 @@ jobs:
       
       - name: setup dfx
         uses: dfinity/setup-dfx@main
+        with:
+          dfx-version: "0.20.1"
 
       - name: setup foundry
         uses: foundry-rs/foundry-toolchain@v1
