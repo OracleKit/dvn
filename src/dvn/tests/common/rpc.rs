@@ -32,6 +32,7 @@ impl RpcRequest {
     }
 }
 
+#[allow(dead_code)]
 #[derive(Clone)]
 pub struct ParsedRpcRequest {
     pub id: u64,

@@ -1,7 +1,5 @@
-use common::{get_signer_address, parse_rpc_request, process_rpc_request, rpc_request_loop, setup_pic, submit_init_call, submit_setup_chain_call, ChainStateMachineFactory};
+use common::{get_signer_address, rpc_request_loop, setup_pic, submit_init_call, submit_setup_chain_call, ChainStateMachineFactory};
 use ethers_core::types::Address;
-use pocket_ic::common::rest::MockCanisterHttpResponse;
-use core::str;
 use std::str::FromStr;
 
 mod common;

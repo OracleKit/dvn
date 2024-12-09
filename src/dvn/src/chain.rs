@@ -2,6 +2,7 @@ use ethers_core::{abi::Address, types::BlockNumber};
 use crate::{contracts::DVN, gas::GasManager, nonce::NonceManager, provider::Provider, signer::Signer, state::GlobalState, task::Task, transaction::Transaction};
 use std::{rc::Rc, str::FromStr};
 
+#[allow(dead_code)]
 pub struct ChainState {
     pub chain_id: u64,
     pub endpoint_id: u64,

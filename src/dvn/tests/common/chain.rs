@@ -1,13 +1,15 @@
 use std::cmp;
-use ethers_core::{abi::{encode, Event, EventParam, ParamType, Token}, types::{Address, Bloom, Bytes, Eip1559TransactionRequest, Filter, FilterBlockOption, Log, NameOrAddress, OtherFields, Signature, TransactionReceipt, ValueOrArray, H256, U256}};
+use ethers_core::{abi::{encode, Event, EventParam, ParamType, Token}, types::{Address, Bloom, Bytes, Eip1559TransactionRequest, Filter, FilterBlockOption, Log, OtherFields, Signature, TransactionReceipt, ValueOrArray, H256, U256}};
 use super::utils::{extract_block_number, get_txn_hash};
 
+#[allow(dead_code)]
 #[derive(Debug)]
 struct Block {
     hash: H256,
     num_txns: usize,
 }
 
+#[allow(dead_code)]
 #[derive(Debug)]
 pub struct ChainStateMachineFactory {
     sender: Address,
@@ -58,6 +60,7 @@ impl ChainStateMachineFactory {
     }
 }
 
+#[allow(dead_code)]
 #[derive(Debug)]
 pub struct ChainStateMachine {
     url: String,
@@ -132,6 +135,7 @@ impl ChainStateMachine {
         self.contract
     }
 
+    #[allow(dead_code)]
     pub fn mine(&mut self) {
         self.block_number = self.block_number.checked_add(1.into()).unwrap();
         let mut mine_txn_index: Option<usize> = None;
@@ -206,14 +210,17 @@ impl ChainStateMachine {
         });
     }
 
+    #[allow(dead_code)]
     pub fn set_base_gas(&mut self, base_gas: U256) {
         self.base_gas = base_gas;
     }
 
+    #[allow(dead_code)]
     pub fn set_priority_gas(&mut self, priority_gas: U256) {
         self.priority_gas = priority_gas;
     }
 
+    #[allow(dead_code)]
     pub fn emit_log(&mut self, dst_eid: U256, num_confirmations: U256, data: Bytes) {
         let event = Event {
             name: "TaskAssigned".into(),
