@@ -23,24 +23,24 @@ impl Provider {
     }
 
     pub async fn block_number(&self) -> u64 {
-        let block_num: U64 = self.base.request("eth_blockNumber", [] as [u8; 0]).await;
+        let block_num: U64 = self.base.request("eth_blockNumber", None as Option<[u8; 0]>).await;
         block_num.as_u64()
     }
 
     pub async fn nonce(&self, account: &Address) -> NonceConfig {
-        let nonce: U256 = self.base.request("eth_getTransactionCount", (account.encode_hex_with_prefix(), "latest")).await;
+        let nonce: U256 = self.base.request("eth_getTransactionCount", Some((account.encode_hex_with_prefix(), "latest"))).await;
         NonceConfig { nonce }
     }
 
     pub async fn gas(&self) -> CurrentGasConfig {
-        let priority_fees: U256 = self.base.request("eth_maxPriorityFeePerGas", vec![] as Vec<u8>).await;
-        let base_fees: U256 = self.base.request("eth_gasPrice", vec![] as Vec<u8>).await;
+        let priority_fees: U256 = self.base.request("eth_maxPriorityFeePerGas", None as Option<[u8; 0]>).await;
+        let base_fees: U256 = self.base.request("eth_gasPrice", None as Option<[u8; 0]>).await;
 
         CurrentGasConfig { base_fees, priority_fees }
     }
 
     pub async fn send(&self, txn: Bytes) -> String {
-        self.base.request("eth_sendRawTransaction", (txn, )).await
+        self.base.request("eth_sendRawTransaction", Some((txn, ))).await
     }
     
     pub async fn logs(&self, filter: LogFilter) -> Vec<Log> {
@@ -63,6 +63,6 @@ impl Provider {
             ]
         };
 
-        self.base.request("eth_getLogs", [filter]).await
+        self.base.request("eth_getLogs", Some([filter])).await
     }
 }

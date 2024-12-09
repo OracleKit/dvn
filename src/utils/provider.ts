@@ -2,6 +2,32 @@ import { Address, Chain, createWalletClient, GetContractReturnType, Hex, http, p
 import { privateKeyToAccount } from 'viem/accounts';
 import { deployContract, getContract } from './evm';
 import { getMockChain } from './chain';
+import assert from 'assert';
+
+
+export function getProvider(name: string) {
+    name = name.toUpperCase();
+
+    const adminPrivateKey = process.env.ADMIN_PRIVATE_KEY as Hex;
+    const rpcUrl = process.env[name + "_RPC_URL"] as string;
+    const chainId = parseInt(process.env[name + "_CHAIN_ID"] as string);
+    const eid = parseInt(process.env[name + "_ENDPOINT_ID"] as string);
+    const endpoint = process.env[name + "_ENDPOINT_ADDRESS"] as Hex;
+    const dvnAddress = process.env[name + "_DVN_ADDRESS"] as Hex;
+    const oappAddress = process.env[name + "_OAPP_ADDRESS"] as Hex;
+    
+    assert(adminPrivateKey);
+    assert(rpcUrl);
+    assert(chainId);
+    assert(eid);
+    assert(endpoint);
+
+    const provider = new ProviderWrapper(adminPrivateKey, rpcUrl, chainId, endpoint, eid);
+    if ( dvnAddress ) provider.dvn = dvnAddress;
+    if ( oappAddress ) provider.mockApp = oappAddress;
+
+    return provider;
+}
 
 export class ProviderWrapper {
     private readonly _wallet;
@@ -59,26 +85,5 @@ export class ProviderWrapper {
 
     set mockApp( mockApp: Hex | undefined ) {
         this._mockApp = mockApp;
-    }
-
-    async deployDVN() {
-        if ( this._dvn ) throw new Error("DVN already deployed!");
-        this._dvn = await deployContract(this, "DVN", [this._endpoint]);
-    }
-
-    async deployMockOApp() {
-        if ( !this._dvn ) throw new Error("DVN not deployed!");
-        if ( this._mockApp ) throw new Error("Already deployed oapp!");
-        
-        this._mockApp = await deployContract(this, "MockOApp", [this._endpoint, this._dvn]);
-    }
-
-    async setPeer(provider: ProviderWrapper) {
-        if ( !this._mockApp || !provider.mockApp ) throw new Error("OApp not deployed");
-
-        const oapp = await getContract(this, "MockOApp", this._mockApp);
-        await this.wallet.waitForTransactionReceipt({
-            hash: await oapp.write.initPeer([provider.eid, provider.mockApp!])
-        });
     }
 };

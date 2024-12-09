@@ -5,11 +5,8 @@ export SINK_LOGS_DIR=$SINK_DIR/logs
 export SINK_ENV_DIR=$SINK_DIR/env
 export SINK_BIN_DIR=$SINK_DIR/bin
 export SUITE_CHAINS_LIST_FILE=$SINK_ENV_DIR/chains
-export SUITE_CHAINS_ENV_FILE=$SINK_ENV_DIR/.env.chains
 export SUITE_GENERATED_ENV_FILE=$SINK_ENV_DIR/.env.generated
-export USER_CHAINS_ENV_FILE=.env.chains
-export USER_CONFIG_ENV_FILE=.env.config
-export DEPLOYED_ENV_LOCAL_FILE=.env.local
+export USER_ENV_FILE=.env.local
 
 function _terminate_trap {
     exit_code=$?
@@ -37,7 +34,6 @@ function setup_directories {
     mkdir $SINK_ENV_DIR 2>/dev/null
     mkdir $SINK_BIN_DIR 2>/dev/null
     touch $SUITE_CHAINS_LIST_FILE 2>/dev/null
-    touch $SUITE_CHAINS_ENV_FILE 2>/dev/null
     touch $SUITE_GENERATED_ENV_FILE 2>/dev/null
     set -e
 }

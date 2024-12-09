@@ -37,6 +37,8 @@ jobs:
       
       - name: setup dfx
         uses: dfinity/setup-dfx@main
+        with:
+          dfx-version: "0.20.1"
 
       - name: setup foundry
         uses: foundry-rs/foundry-toolchain@v1
@@ -49,11 +51,22 @@ jobs:
           dfx --version
           forge --version
 
+      - name: Install mkcert and generate certificates
+        run: |
+          sudo apt install libnss3-tools
+          curl -JLO "https://dl.filippo.io/mkcert/latest?for=linux/amd64"
+          chmod +x mkcert-v*-linux-amd64
+          sudo cp mkcert-v*-linux-amd64 /usr/local/bin/mkcert
+          mkcert -install
+          mkcert localhost
+
       - name: install deps
+        env:
+          ALCHEMY_API_KEY: ${{ secrets.ALCHEMY_API_KEY }}
         run: |
           yarn install --frozen-lockfile
           forge install
-          yarn setup
+          yarn setup "$ALCHEMY_API_KEY"
           cargo install candid-extractor
       
       - name: build contracts & canisters
@@ -68,3 +81,7 @@ jobs:
       - name: run dvn canister tests
         run: |
           yarn test:dvn
+      
+      - name: run e2e tests
+        run: |
+          yarn test:e2e

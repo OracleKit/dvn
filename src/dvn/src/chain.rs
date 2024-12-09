@@ -2,8 +2,10 @@ use ethers_core::{abi::Address, types::BlockNumber};
 use crate::{contracts::DVN, gas::GasManager, nonce::NonceManager, provider::Provider, signer::Signer, state::GlobalState, task::Task, transaction::Transaction};
 use std::{rc::Rc, str::FromStr};
 
+#[allow(dead_code)]
 pub struct ChainState {
     pub chain_id: u64,
+    pub endpoint_id: u64,
     provider: Provider,
     dvn: DVN,
     gas: GasManager,
@@ -13,7 +15,7 @@ pub struct ChainState {
 }
 
 impl ChainState {
-    pub fn new(rpc_url: &str, chain_id: u64, dvn_address: &str) -> Self {
+    pub fn new(rpc_url: &str, chain_id: u64, endpoint_id: u64, dvn_address: &str) -> Self {
         let provider = Provider::new(rpc_url.to_string());
         let dvn = DVN::new(Address::from_str(dvn_address).unwrap(), chain_id);
         let gas = GasManager::new();
@@ -22,6 +24,7 @@ impl ChainState {
 
         Self {
             chain_id,
+            endpoint_id,
             provider,
             dvn,
             gas,

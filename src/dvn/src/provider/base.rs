@@ -7,7 +7,9 @@ struct Request<'a, T: Serialize> {
     jsonrpc: &'a str,
     id: u32,
     method: &'a str,
-    params: T
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    params: Option<T>
 }
 
 #[allow(dead_code)]
@@ -38,7 +40,7 @@ impl BaseProvider {
         }
     } 
 
-    pub async fn request<T, R>(&self, method: &str, params: T) -> R
+    pub async fn request<T, R>(&self, method: &str, params: Option<T>) -> R
         where
             T: Serialize,
             R: DeserializeOwned
@@ -62,7 +64,7 @@ impl BaseProvider {
             ],
             body: Some(payload),
             transform: None
-        }, 2_000_000_000).await.unwrap();
+        }, 80_000_000_000).await.unwrap();
 
         let response: Response = serde_json::from_slice(&response.body).unwrap();
         serde_json::from_str(response.result.unwrap().get()).unwrap()

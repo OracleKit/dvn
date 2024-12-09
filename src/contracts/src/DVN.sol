@@ -59,12 +59,12 @@ contract DVN is ILayerZeroDVN, UUPSUpgradeable {
     function assignJob(
         AssignJobParam calldata task_,
         bytes calldata /*_options*/
-    ) external payable onlyProxy onlyEndpoint returns (uint256) {
+    ) external payable onlyProxy returns (uint256) {
         emit TaskAssigned(task_.dstEid, task_.confirmations, task_);
         return 0;
     }
 
-    function verify(AssignJobParam calldata task_) external onlyProxy onlyAdmin {
+    function verify(AssignJobParam calldata task_) external onlyProxy {
         bytes calldata packetHeader_ = task_.packetHeader;
         address receiver_ = _bytes32ToAddress(packetHeader_.receiver());
 
@@ -85,7 +85,7 @@ contract DVN is ILayerZeroDVN, UUPSUpgradeable {
         uint64 /*_confirmations*/,
         address /*_sender*/,
         bytes calldata /*_options*/
-    ) external pure returns (uint256) {
+    ) external view onlyProxy returns (uint256) {
         return 0;
     }
 

@@ -56,11 +56,11 @@ async fn init() {
 }
 
 #[ic_cdk::update]
-async fn add_chain(rpc_url: String, chain_id: u64, dvn_address: String) {
-    GlobalState::add_chain(rpc_url, chain_id, dvn_address).await;
+async fn add_chain(rpc_url: String, chain_id: u64, endpoint_id: u64, dvn_address: String) {
+    GlobalState::add_chain(rpc_url, chain_id, endpoint_id, dvn_address).await;
 }
 
-#[ic_cdk::update]
+#[ic_cdk::query]
 async fn address() -> String {
     GlobalState::signer().address().encode_hex_with_prefix()
 }

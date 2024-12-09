@@ -1,5 +1,6 @@
-import { setSuiteEnv } from "./utils/env";
-import { getProvider } from "./utils/provider";
+import { deployContract, getContract } from "../../src/utils/evm";
+import { getProvider } from "../../src/utils/provider";
+import { setSuiteEnv } from "./utils";
 
 async function main(chains: string[]) {
     const providers = chains.map(chain => getProvider(chain));
@@ -7,8 +8,16 @@ async function main(chains: string[]) {
     await Promise.all(
         providers.map(
             async provider => {
-                await provider.deployDVN();
-                await provider.deployMockOApp();
+                const dvn = await deployContract(provider, "DVN", []);
+                const proxy = await deployContract(provider, "DVNProxy", [dvn]);
+                const oapp = await deployContract(provider, "MockOApp", [provider.endpoint, proxy]);
+                const dvnContract = await getContract(provider, "DVN", proxy);
+                await provider.wallet.waitForTransactionReceipt({
+                    hash: await dvnContract.write.setEndpoint([provider.endpoint])
+                });
+
+                provider.dvn = proxy;
+                provider.mockApp = oapp;
             }
         )
     );
@@ -19,8 +28,17 @@ async function main(chains: string[]) {
                 await Promise.all(
                     providers.slice(i+1).map(
                         async providerB => {
-                            await providerA.setPeer(providerB);
-                            await providerB.setPeer(providerA);
+                            const oappA = await getContract(providerA, "MockOApp", providerA.mockApp!);
+                            const oappB = await getContract(providerB, "MockOApp", providerB.mockApp!);
+
+                            await Promise.all([
+                                providerA.wallet.waitForTransactionReceipt({
+                                    hash: await oappA.write.initPeer([ providerB.eid, providerB.mockApp! ])
+                                }),
+                                providerB.wallet.waitForTransactionReceipt({
+                                    hash: await oappB.write.initPeer([ providerA.eid, providerA.mockApp! ])
+                                })
+                            ]);
                         }
                     )
                 )

@@ -6,7 +6,8 @@ export type ChainConfig = {
     chainId: number,
     endpointId: number,
     endpoint: Hex,
-    dvn: Hex | undefined
+    dvn: Hex | undefined,
+    oapp: Hex | undefined,
 };
 
 export type AdminConfig = {
@@ -22,9 +23,10 @@ export function getChainConfig(name: string): ChainConfig {
     const endpointId = parseInt(process.env[nameUpper + "_ENDPOINT_ID"]!);
     const endpoint = process.env[nameUpper + "_ENDPOINT_ADDRESS"]! as Hex;
     const dvn = process.env[nameUpper + "_DVN_ADDRESS"]! as Hex;
+    const oapp = process.env[nameUpper + "_OAPP_ADDRESS"]! as Hex;
 
     if ( rpcUrl && rpcSslUrl && chainId && endpointId && endpoint ) {
-        return { rpcUrl, rpcSslUrl, chainId, endpoint, endpointId, dvn }
+        return { rpcUrl, rpcSslUrl, chainId, endpoint, endpointId, dvn, oapp }
     }
 
     throw new Error("Chain config not present");

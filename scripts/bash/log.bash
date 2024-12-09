@@ -23,7 +23,7 @@ function pretty_log {
     done
 }
 
-function clear_logs {
+function pretty_log_clear {
     rm -rf $_LOGS_DIR 2>&1
     mkdir $_LOGS_DIR
 }

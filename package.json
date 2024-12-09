@@ -14,14 +14,10 @@
     "deploy:contracts": "bash ./scripts/bash/deploy/contracts.bash",
     "deploy:dvn": "bash ./scripts/bash/deploy/dvn.bash",
     "test:contracts": "forge test",
-    "test:dvn": "bash ./scripts/bash/test/dvn.bash"
+    "test:dvn": "bash ./scripts/bash/test/dvn.bash",
+    "test:e2e": "bash ./scripts/bash/test/e2e.bash"
   },
   "devDependencies": {
-    "@dfinity/agent": "^2.1.3",
-    "@dfinity/candid": "^2.1.3",
-    "@dfinity/identity": "^2.1.3",
-    "@dfinity/principal": "^2.1.3",
-    "@hadronous/pic": "^0.10.0-b0",
     "@layerzerolabs/lz-evm-messagelib-v2": "^3.0.1",
     "@layerzerolabs/lz-evm-protocol-v2": "^3.0.1",
     "@layerzerolabs/oapp-evm": "^0.0.4",
