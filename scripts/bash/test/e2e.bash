@@ -40,10 +40,10 @@ eth_start_chain $dest_chain_name $(( BASE_PORT + 2 ))
 ssl_start_proxy $(( BASE_PORT + 1 )) $(( BASE_PORT + 3 ))
 ssl_start_proxy $(( BASE_PORT + 2 )) $(( BASE_PORT + 4 ))
 
-src_chain_rpc_url="http://127.0.0.1:$(( BASE_PORT + 1 ))/"
-src_chain_rpc_ssl_url="https://127.0.0.1:$(( BASE_PORT + 3 ))/"
-dest_chain_rpc_url="http://127.0.0.1:$(( BASE_PORT + 2 ))/"
-dest_chain_rpc_ssl_url="https://127.0.0.1:$(( BASE_PORT + 4 ))/"
+src_chain_rpc_url="http://localhost:$(( BASE_PORT + 1 ))/"
+src_chain_rpc_ssl_url="https://localhost:$(( BASE_PORT + 3 ))/"
+dest_chain_rpc_url="http://localhost:$(( BASE_PORT + 2 ))/"
+dest_chain_rpc_ssl_url="https://localhost:$(( BASE_PORT + 4 ))/"
 
 # fund admin
 eth_fund_account $src_chain_name $(( BASE_PORT + 1 )) $admin_address
@@ -61,9 +61,6 @@ src_chain_dvn_address=$(eth_get_chain_env $src_chain_name_caps "DVN_ADDRESS")
 src_chain_oapp_address=$(eth_get_chain_env $src_chain_name_caps "OAPP_ADDRESS")
 dest_chain_dvn_address=$(eth_get_chain_env $dest_chain_name_caps "DVN_ADDRESS")
 dest_chain_oapp_address=$(eth_get_chain_env $dest_chain_name_caps "OAPP_ADDRESS")
-
-cat $SINK_LOGS_DIR/*
-curl $src_chain_rpc_ssl_url || cat $SINK_LOGS_DIR/*
 
 # start chains
 dfx_start $BASE_PORT

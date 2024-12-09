@@ -13,6 +13,7 @@ function ssl_start_proxy {
         --source $2 --target $1 \
         --cert localhost.pem --key localhost-key.pem \
         >$SSL_LOG_FILE 2>&1 &
+        
     
     while grep "Started proxy: https://localhost:$2" $SSL_LOG_FILE >/dev/null 2>&1; do
         sleep .1
