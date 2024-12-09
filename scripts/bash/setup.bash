@@ -7,5 +7,5 @@ source $DIRNAME/dfx.bash
 setup_directories
 
 if [ ! -f $SINK_BIN_DIR/pocket-ic ]; then
-    setup_pocketic_bin
+    dfx_setup_pocketic_bin
 fi
