@@ -8,7 +8,6 @@ describe("DVN", function() {
 
         const srcChainName = process.env.SOURCE_CHAIN_NAME!;
         const destChainName = process.env.DESTINATION_CHAIN_NAME!;
-        console.log(srcChainName, destChainName);
 
         assert(srcChainName, "Source chain env present");
         assert(destChainName, "Destination chain env present");
@@ -22,7 +21,6 @@ describe("DVN", function() {
         const destDvn = await getContract(destProvider, "DVN", destProvider.dvn!);
         const destOapp = await getContract(destProvider, "MockOApp", destProvider.mockApp!);
 
-        console.log(await srcOapp.read.peers([destProvider.eid]), destOapp.address);
         const fees = await srcOapp.read.quote([destProvider.eid, "Helllo"]);
 
         await srcProvider.wallet.waitForTransactionReceipt({
