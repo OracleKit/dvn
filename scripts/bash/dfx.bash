@@ -41,6 +41,7 @@ function dfx_add_dvn_chain {
 
 # Installs to $SINK_BIN_DIR/pocket-ic
 function dfx_setup_pocketic_bin {
+    original_dir=$(pwd)
     cd $SINK_BIN_DIR
     rm -r $SINK_BIN_DIR/pocket-ic 2>/dev/null || true
     
@@ -58,4 +59,6 @@ function dfx_setup_pocketic_bin {
         mv pocket-ic-x86_64-linux pocket-ic
         chmod +x pocket-ic
     fi
+
+    cd $original_dir
 }
