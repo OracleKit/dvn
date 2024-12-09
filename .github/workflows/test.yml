@@ -50,10 +50,12 @@ jobs:
           forge --version
 
       - name: install deps
+        env:
+          ALCHEMY_API_KEY= ${{ secrets.ALCHEMY_API_KEY }}
         run: |
           yarn install --frozen-lockfile
           forge install
-          yarn setup
+          yarn setup "$ALCHEMY_API_KEY"
           cargo install candid-extractor
       
       - name: build contracts & canisters

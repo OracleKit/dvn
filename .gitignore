@@ -24,7 +24,6 @@ dist/
 # environment variables
 .env
 .env.local
-.env.*
 *.pem
 
 artifacts/
