@@ -51,7 +51,7 @@ jobs:
 
       - name: install deps
         env:
-          ALCHEMY_API_KEY= ${{ secrets.ALCHEMY_API_KEY }}
+          ALCHEMY_API_KEY: ${{ secrets.ALCHEMY_API_KEY }}
         run: |
           yarn install --frozen-lockfile
           forge install
