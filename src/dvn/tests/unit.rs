@@ -25,7 +25,7 @@ fn test_hello_world() {
 
     let requests_collection = rpc_request_loop(&pic, &mut state_machine_factory).unwrap();
     let mut requests = requests_collection.filter_by_rpc(&rpc_url);
-    requests.sort_by_key(|&request| request.data.as_u64());
+    requests.sort_by_key(|&request| request.data[0].as_u64());
     
     pic.await_call(msg_id).unwrap();
 

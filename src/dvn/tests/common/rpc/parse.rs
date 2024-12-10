@@ -5,42 +5,7 @@ use pocket_ic::common::rest::{CanisterHttpMethod, CanisterHttpRequest};
 use serde::Deserialize;
 use serde_json::value::RawValue;
 
-use super::super::{ChainStateMachine, ChainStateMachineFactory};
-
-
-#[derive(Deserialize, Clone)]
-pub enum RpcRequest {
-    BlockNumber,
-    ChainId,
-    GetTransactionCount,
-    GasPrice,
-    MaxPriorityFeePerGas,
-    GetLogs(Filter),
-    SendRawTransaction((Eip1559TransactionRequest, Signature))
-}
-
-impl RpcRequest {
-    pub fn as_u64(&self) -> u64 {
-        match self {
-            RpcRequest::BlockNumber => 0,
-            RpcRequest::ChainId => 1,
-            RpcRequest::GasPrice => 2,
-            RpcRequest::GetLogs(_) => 3,
-            RpcRequest::GetTransactionCount => 4,
-            RpcRequest::MaxPriorityFeePerGas => 5,
-            RpcRequest::SendRawTransaction(_) => 6
-        }
-    }
-}
-
-#[allow(dead_code)]
-#[derive(Clone)]
-pub struct ParsedRpcRequest {
-    pub id: u64,
-    pub url: String,
-    pub rpc_id: u64,
-    pub data: RpcRequest
-}
+use super::{super::{ChainStateMachine, ChainStateMachineFactory}, ParsedRpcBatch, ParsedRpcRequestData};
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -106,7 +71,7 @@ fn parse_txn(raw_txn: &Bytes, state_machine: &ChainStateMachine) -> Result<(Eip1
     Ok((txn, signature))
 }
 
-pub fn parse_rpc_request(req: &CanisterHttpRequest, state_machine_factory: &ChainStateMachineFactory) -> Result<ParsedRpcRequest, RpcParseError> {
+pub fn parse_rpc_batch(req: &CanisterHttpRequest, state_machine_factory: &ChainStateMachineFactory) -> Result<ParsedRpcBatch, RpcParseError> {
     let id = req.request_id;
     let url = &req.url;
     let method = &req.http_method;
@@ -133,7 +98,7 @@ pub fn parse_rpc_request(req: &CanisterHttpRequest, state_machine_factory: &Chai
                 return Err(RpcParseError::FoundParams);
             }
 
-            RpcRequest::BlockNumber
+            ParsedRpcRequestData::BlockNumber
         },
 
         "eth_chainId" => {
@@ -141,7 +106,7 @@ pub fn parse_rpc_request(req: &CanisterHttpRequest, state_machine_factory: &Chai
                 return Err(RpcParseError::FoundParams);
             }
             
-            RpcRequest::ChainId
+            ParsedRpcRequestData::ChainId
         },
 
         "eth_getTransactionCount" => {
@@ -154,7 +119,7 @@ pub fn parse_rpc_request(req: &CanisterHttpRequest, state_machine_factory: &Chai
                     return Err(RpcParseError::InvalidParams);
                 }
 
-                RpcRequest::GetTransactionCount
+                ParsedRpcRequestData::GetTransactionCount
             } else {
                 return Err(RpcParseError::FoundParams);
             }
@@ -165,7 +130,7 @@ pub fn parse_rpc_request(req: &CanisterHttpRequest, state_machine_factory: &Chai
                 return Err(RpcParseError::FoundParams);
             }
             
-            RpcRequest::GasPrice
+            ParsedRpcRequestData::GasPrice
         },
 
         "eth_maxPriorityFeePerGas" => {
@@ -173,7 +138,7 @@ pub fn parse_rpc_request(req: &CanisterHttpRequest, state_machine_factory: &Chai
                 return Err(RpcParseError::FoundParams);
             }
             
-            RpcRequest::MaxPriorityFeePerGas
+            ParsedRpcRequestData::MaxPriorityFeePerGas
         },
 
         "eth_getLogs" => {
@@ -181,7 +146,7 @@ pub fn parse_rpc_request(req: &CanisterHttpRequest, state_machine_factory: &Chai
                 if let Ok(parsed_params) = serde_json::from_str::<Vec<Filter>>(params.get()) {
                     if parsed_params.len() != 1 { return Err(RpcParseError::InvalidParams); }
 
-                    RpcRequest::GetLogs(parsed_params[0].clone())
+                    ParsedRpcRequestData::GetLogs(parsed_params[0].clone())
                 } else {
                     return Err(RpcParseError::InvalidParams);
                 }
@@ -196,7 +161,7 @@ pub fn parse_rpc_request(req: &CanisterHttpRequest, state_machine_factory: &Chai
                     if parsed_params.len() != 1 { return Err(RpcParseError::InvalidParams); }
 
                     let txn = parse_txn(&parsed_params[0], state_machine)?;
-                    RpcRequest::SendRawTransaction(txn)
+                    ParsedRpcRequestData::SendRawTransaction(txn)
                 } else {
                     return Err(RpcParseError::InvalidParams);
                 }
@@ -209,11 +174,11 @@ pub fn parse_rpc_request(req: &CanisterHttpRequest, state_machine_factory: &Chai
     };
 
     Ok(
-        ParsedRpcRequest {
-            id,
-            url: url.clone(),
+        ParsedRpcBatch {
+            request_id: id,
             rpc_id: parsed_req.id,
-            data: rpc_data
+            url: url.clone(),
+            data: vec![rpc_data]
         }
     )
 }
