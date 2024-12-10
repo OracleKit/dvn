@@ -9,7 +9,7 @@ pub use process::*;
 use super::ChainStateMachineFactory;
 
 #[derive(Clone)]
-pub enum ParsedRpcRequestData {
+pub enum RpcRequestData {
     BlockNumber,
     ChainId,
     GetTransactionCount,
@@ -19,31 +19,37 @@ pub enum ParsedRpcRequestData {
     SendRawTransaction((Eip1559TransactionRequest, Signature))
 }
 
-impl ParsedRpcRequestData {
+impl RpcRequestData {
     pub fn as_u64(&self) -> u64 {
         match self {
-            ParsedRpcRequestData::BlockNumber => 0,
-            ParsedRpcRequestData::ChainId => 1,
-            ParsedRpcRequestData::GasPrice => 2,
-            ParsedRpcRequestData::GetLogs(_) => 3,
-            ParsedRpcRequestData::GetTransactionCount => 4,
-            ParsedRpcRequestData::MaxPriorityFeePerGas => 5,
-            ParsedRpcRequestData::SendRawTransaction(_) => 6
+            RpcRequestData::BlockNumber => 0,
+            RpcRequestData::ChainId => 1,
+            RpcRequestData::GasPrice => 2,
+            RpcRequestData::GetLogs(_) => 3,
+            RpcRequestData::GetTransactionCount => 4,
+            RpcRequestData::MaxPriorityFeePerGas => 5,
+            RpcRequestData::SendRawTransaction(_) => 6
         }
     }
 }
 
+#[derive(Clone)]
+pub struct RpcRequest {
+    pub id: u64,
+    pub data: RpcRequestData
+}
+
 #[allow(dead_code)]
 #[derive(Clone)]
-pub struct ParsedRpcBatch {
+pub struct RpcBatch {
     pub request_id: u64,
-    pub rpc_id: u64,
     pub url: String,
-    pub data: Vec<ParsedRpcRequestData>
+    pub is_batch: bool,
+    pub data: Vec<RpcRequest>
 }
 
 pub struct RequestCollection {
-    requests: Vec<ParsedRpcBatch>
+    requests: Vec<RpcBatch>
 }
 
 impl RequestCollection {
@@ -51,11 +57,11 @@ impl RequestCollection {
         Self { requests: vec![] }
     }
 
-    pub fn add_batch(&mut self, request: ParsedRpcBatch) {
+    pub fn add_batch(&mut self, request: RpcBatch) {
         self.requests.push(request);
     }
 
-    pub fn filter_by_rpc(&self, rpc_url: &str) -> Vec<&ParsedRpcBatch> {
+    pub fn filter_by_rpc(&self, rpc_url: &str) -> Vec<&RpcBatch> {
         self.requests.iter().filter(|&request| &request.url == rpc_url).collect()
     }
 }

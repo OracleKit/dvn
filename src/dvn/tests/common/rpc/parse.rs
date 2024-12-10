@@ -5,7 +5,7 @@ use pocket_ic::common::rest::{CanisterHttpMethod, CanisterHttpRequest};
 use serde::Deserialize;
 use serde_json::value::RawValue;
 
-use super::{super::{ChainStateMachine, ChainStateMachineFactory}, ParsedRpcBatch, ParsedRpcRequestData};
+use super::{super::{ChainStateMachine, ChainStateMachineFactory}, RpcBatch, RpcRequest, RpcRequestData};
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -18,6 +18,7 @@ struct Request {
 
 #[derive(Debug)]
 pub enum RpcParseError {
+    EmptyBatch,
     MissingParams,
     FoundParams,
     InvalidParams,
@@ -71,46 +72,30 @@ fn parse_txn(raw_txn: &Bytes, state_machine: &ChainStateMachine) -> Result<(Eip1
     Ok((txn, signature))
 }
 
-pub fn parse_rpc_batch(req: &CanisterHttpRequest, state_machine_factory: &ChainStateMachineFactory) -> Result<ParsedRpcBatch, RpcParseError> {
-    let id = req.request_id;
-    let url = &req.url;
-    let method = &req.http_method;
-    let data = &req.body;
-
-    let Some(state_machine) =  state_machine_factory.get(&url) else {
-        return Err(RpcParseError::InvalidRpcUrl);
-    };
-
-    if method != &CanisterHttpMethod::POST {
-        return Err(RpcParseError::InvalidHttpMethod);
-    }
-
-    let parsed_req: Request = 
-        serde_json::from_slice(data.borrow()).map_err(|_| RpcParseError::InvalidBody)?;
-
-    if parsed_req.jsonrpc != "2.0" {
+fn parse_rpc_request(request: &Request, state_machine: &ChainStateMachine) -> Result<RpcRequest, RpcParseError> {
+    if request.jsonrpc != "2.0" {
         return Err(RpcParseError::InvalidJsonRpcVersion);
     }
 
-    let rpc_data = match parsed_req.method.borrow() {
+    let request_data = match request.method.as_str() {
         "eth_blockNumber" => {
-            if parsed_req.params.is_some() {
+            if request.params.is_some() {
                 return Err(RpcParseError::FoundParams);
             }
 
-            ParsedRpcRequestData::BlockNumber
+            RpcRequestData::BlockNumber
         },
 
         "eth_chainId" => {
-            if parsed_req.params.is_some() {
+            if request.params.is_some() {
                 return Err(RpcParseError::FoundParams);
             }
             
-            ParsedRpcRequestData::ChainId
+            RpcRequestData::ChainId
         },
 
         "eth_getTransactionCount" => {
-            if let Some(params) = parsed_req.params {
+            if let Some(params) = &request.params {
                 let Ok(parsed_params) = serde_json::from_str::<(Address, String)>(params.get()) else {
                     return Err(RpcParseError::InvalidParams);
                 };
@@ -119,34 +104,34 @@ pub fn parse_rpc_batch(req: &CanisterHttpRequest, state_machine_factory: &ChainS
                     return Err(RpcParseError::InvalidParams);
                 }
 
-                ParsedRpcRequestData::GetTransactionCount
+                RpcRequestData::GetTransactionCount
             } else {
                 return Err(RpcParseError::FoundParams);
             }
         },
 
         "eth_gasPrice" => {
-            if parsed_req.params.is_some() {
+            if request.params.is_some() {
                 return Err(RpcParseError::FoundParams);
             }
             
-            ParsedRpcRequestData::GasPrice
+            RpcRequestData::GasPrice
         },
 
         "eth_maxPriorityFeePerGas" => {
-            if parsed_req.params.is_some() {
+            if request.params.is_some() {
                 return Err(RpcParseError::FoundParams);
             }
             
-            ParsedRpcRequestData::MaxPriorityFeePerGas
+            RpcRequestData::MaxPriorityFeePerGas
         },
 
         "eth_getLogs" => {
-            if let Some(params) = parsed_req.params {
+            if let Some(params) = &request.params {
                 if let Ok(parsed_params) = serde_json::from_str::<Vec<Filter>>(params.get()) {
                     if parsed_params.len() != 1 { return Err(RpcParseError::InvalidParams); }
 
-                    ParsedRpcRequestData::GetLogs(parsed_params[0].clone())
+                    RpcRequestData::GetLogs(parsed_params[0].clone())
                 } else {
                     return Err(RpcParseError::InvalidParams);
                 }
@@ -156,12 +141,12 @@ pub fn parse_rpc_batch(req: &CanisterHttpRequest, state_machine_factory: &ChainS
         },
         
         "eth_sendRawTransaction" => {
-            if let Some(params) = parsed_req.params {
+            if let Some(params) = &request.params {
                 if let Ok(parsed_params) = serde_json::from_str::<Vec<Bytes>>(params.get()) {
                     if parsed_params.len() != 1 { return Err(RpcParseError::InvalidParams); }
 
                     let txn = parse_txn(&parsed_params[0], state_machine)?;
-                    ParsedRpcRequestData::SendRawTransaction(txn)
+                    RpcRequestData::SendRawTransaction(txn)
                 } else {
                     return Err(RpcParseError::InvalidParams);
                 }
@@ -173,12 +158,53 @@ pub fn parse_rpc_batch(req: &CanisterHttpRequest, state_machine_factory: &ChainS
         _ => return Err(RpcParseError::InvalidRpcMethod),
     };
 
-    Ok(
-        ParsedRpcBatch {
-            request_id: id,
-            rpc_id: parsed_req.id,
-            url: url.clone(),
-            data: vec![rpc_data]
+    return Ok(RpcRequest {
+        id: request.id,
+        data: request_data
+    });
+}
+
+pub fn parse_rpc_batch(http_request: &CanisterHttpRequest, state_machine_factory: &ChainStateMachineFactory) -> Result<RpcBatch, RpcParseError> {
+    let id = http_request.request_id;
+    let url = &http_request.url;
+    let method = &http_request.http_method;
+    let data = &http_request.body;
+    let is_batch: bool;
+
+    let Some(state_machine) = state_machine_factory.get(&url) else {
+        return Err(RpcParseError::InvalidRpcUrl);
+    };
+
+    if method != &CanisterHttpMethod::POST {
+        return Err(RpcParseError::InvalidHttpMethod);
+    }
+
+    let requests: Vec<Request>;
+
+    if let Ok(result) = serde_json::from_slice::<Request>(data.borrow()) {
+        is_batch = false;
+        requests = vec![result];
+    } else if let Ok(result) = serde_json::from_slice::<Vec<Request>>(data.borrow()) {
+        if result.len() == 0 {
+            return Err(RpcParseError::EmptyBatch);
         }
-    )
+
+        is_batch = true;
+        requests = result;
+    } else {
+        return Err(RpcParseError::InvalidBody);
+    }
+
+    let mut parsed_requests = vec![];
+    for request in requests.into_iter() {
+        let parsed_request = parse_rpc_request(&request, state_machine)?;
+        parsed_requests.push(parsed_request);
+    }
+
+    Ok(RpcBatch {
+        request_id: id,
+        url: url.clone(),
+        is_batch: is_batch,
+        data: parsed_requests
+    })
 }
