@@ -8,7 +8,7 @@ pub use process::*;
 
 use super::ChainStateMachineFactory;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum RpcRequestData {
     BlockNumber,
     ChainId,
@@ -33,14 +33,14 @@ impl RpcRequestData {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct RpcRequest {
     pub id: u64,
     pub data: RpcRequestData
 }
 
 #[allow(dead_code)]
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct RpcBatch {
     pub request_id: u64,
     pub url: String,

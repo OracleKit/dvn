@@ -1,7 +1,10 @@
 mod base;
+mod batch;
+mod receipt;
+
 use base::BaseProvider;
-use ethers_core::{abi::{Address, Topic, TopicFilter}, types::{BlockNumber, Bytes, Filter, FilterBlockOption, Log, ValueOrArray, H256, U256, U64}, utils::hex::ToHexExt};
-use crate::{gas::CurrentGasConfig, nonce::NonceConfig};
+pub use receipt::{CurrentGasConfigReceipt, GenericReceipt, Receipt};
+use ethers_core::{abi::{Address, Topic, TopicFilter}, types::{BlockNumber, Bytes, Filter, FilterBlockOption, Log, ValueOrArray, H256, U256}, utils::hex::ToHexExt};
 
 pub struct LogFilter {
     pub address: Address,
@@ -10,7 +13,7 @@ pub struct LogFilter {
     pub topics: TopicFilter
 }
 
-#[derive(Clone, Default)]
+#[derive(Default)]
 pub struct Provider {
     base: BaseProvider
 }
@@ -22,28 +25,26 @@ impl Provider {
         }
     }
 
-    pub async fn block_number(&self) -> u64 {
-        let block_num: U64 = self.base.request("eth_blockNumber", None as Option<[u8; 0]>).await;
-        block_num.as_u64()
+    pub fn block_number(&mut self) -> GenericReceipt<U256> {
+        self.base.issue_request("eth_blockNumber", None as Option<u8>)
     }
 
-    pub async fn nonce(&self, account: &Address) -> NonceConfig {
-        let nonce: U256 = self.base.request("eth_getTransactionCount", Some((account.encode_hex_with_prefix(), "latest"))).await;
-        NonceConfig { nonce }
+    pub fn nonce(&mut self, account: &Address) -> GenericReceipt<U256> {
+        self.base.issue_request("eth_getTransactionCount", Some((account.encode_hex_with_prefix(), "latest")))
     }
 
-    pub async fn gas(&self) -> CurrentGasConfig {
-        let priority_fees: U256 = self.base.request("eth_maxPriorityFeePerGas", None as Option<[u8; 0]>).await;
-        let base_fees: U256 = self.base.request("eth_gasPrice", None as Option<[u8; 0]>).await;
-
-        CurrentGasConfig { base_fees, priority_fees }
+    pub fn gas(&mut self) -> CurrentGasConfigReceipt {
+        CurrentGasConfigReceipt::new(
+            self.base.issue_request("eth_gasPrice", None as Option<u8>),
+            self.base.issue_request("eth_maxPriorityFeePerGas", None as Option<u8>)
+        )
     }
 
-    pub async fn send(&self, txn: Bytes) -> String {
-        self.base.request("eth_sendRawTransaction", Some((txn, ))).await
+    pub fn send(&mut self, txn: Bytes) -> GenericReceipt<String> {
+        self.base.issue_request("eth_sendRawTransaction", Some((txn, )))
     }
     
-    pub async fn logs(&self, filter: LogFilter) -> Vec<Log> {
+    pub fn logs(&mut self, filter: LogFilter) -> GenericReceipt<Vec<Log>> {
         let topic_parse_fn = |topic: Topic<H256>| -> Option<ValueOrArray<Option<H256>>> {
             match topic {
                 Topic::This(h) => Some(ValueOrArray::Value(Some(h))),
@@ -63,6 +64,10 @@ impl Provider {
             ]
         };
 
-        self.base.request("eth_getLogs", Some([filter])).await
+        self.base.issue_request("eth_getLogs", Some([filter]))
+    }
+
+    pub async fn commit(&mut self) {
+        self.base.commit().await;
     }
 }

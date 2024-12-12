@@ -73,7 +73,7 @@ pub fn process_rpc_batch(batch: &RpcBatch, state_machine_factory: &mut ChainStat
     }
 
     let response = if batch.is_batch {
-        serde_json::to_vec(&vec![results]).unwrap()
+        serde_json::to_vec(&results).unwrap()
     } else if results.len() == 1 {
         serde_json::to_vec(&results[0]).unwrap()
     } else {

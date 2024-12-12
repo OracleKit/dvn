@@ -29,5 +29,6 @@ fn test_hello_world() {
     
     pic.await_call(msg_id).unwrap();
 
-    assert_eq!(requests.len(), 4);
+    assert_eq!(requests.len(), 1);
+    assert_eq!(requests[0].data.len(), 4);
 }

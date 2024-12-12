@@ -1,5 +1,5 @@
 use ethers_core::{abi::Address, types::BlockNumber};
-use crate::{contracts::DVN, gas::GasManager, nonce::NonceManager, provider::Provider, signer::Signer, state::GlobalState, task::Task, transaction::Transaction};
+use crate::{contracts::DVN, gas::GasManager, nonce::NonceManager, provider::{Provider, Receipt}, signer::Signer, state::GlobalState, task::Task, transaction::Transaction};
 use std::{rc::Rc, str::FromStr};
 
 #[allow(dead_code)]
@@ -35,29 +35,36 @@ impl ChainState {
     }
 
     pub async fn init(&mut self) {
-        let current_block = self.provider.block_number().await;
         let address = self.signer.address();
-        let nonce = self.provider.nonce(&address).await;
-        let gas = self.provider.gas().await;
+        let current_block_receipt = self.provider.block_number();
+        let nonce_receipt = self.provider.nonce(&address);
+        let gas_receipt = self.provider.gas();
+
+        self.provider.commit().await;
         
-        self.last_processed_block = current_block;
-        self.nonce.update(nonce).await;
-        self.gas.current_fees(gas);
+        self.last_processed_block = current_block_receipt.take().as_u64();
+        self.nonce.update(nonce_receipt.take()).await;
+        self.gas.current_fees(gas_receipt.take());
     }
 
     pub async fn check_for_tasks(&mut self) -> Vec<Task> {
         let from_block = self.last_processed_block;
-        let to_block = self.provider.block_number().await;
 
         let tasks_filter = self.dvn.jobs_filter(
             BlockNumber::Number(from_block.into()),
-            BlockNumber::Number(to_block.into())
+            BlockNumber::Finalized
         );
 
-        let raw_logs = self.provider.logs(tasks_filter).await;
+        let logs_receipt = self.provider.logs(tasks_filter);
+        let gas_receipt = self.provider.gas();
+        let block_number_receipt = self.provider.block_number();
+
+        self.provider.commit().await;
+
+        let raw_logs = logs_receipt.take();
         let tasks: Vec<Task> = raw_logs.into_iter().map(|log| self.dvn.jobs_parse(log)).collect();        
-        self.gas.current_fees(self.provider.gas().await);
-        self.last_processed_block = to_block;
+        self.gas.current_fees(gas_receipt.take());
+        self.last_processed_block = block_number_receipt.take().as_u64();
 
         tasks
     }
@@ -76,8 +83,9 @@ impl ChainState {
             txn.signer(&self.signer);
             let raw_txn = txn.sign(&self.signer).await;
 
-            let hash = self.provider.send(raw_txn).await;
-            txn_hashes.push(hash);
+            let hash_receipt = self.provider.send(raw_txn);
+            self.provider.commit().await;
+            txn_hashes.push(hash_receipt.take());
 
             self.nonce.commit();
         }
