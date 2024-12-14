@@ -32,6 +32,11 @@ contract MessageLibTest is Helper, Test {
         _dvnBehindProxy.revokeRole(messageLibRole, testAddress);
     }
 
+    function test_MESSAGE_LIB_ROLE_SetCorrectly() public {
+        bytes32 messageLibRole = _dvnBehindProxy.MESSAGE_LIB_ROLE();
+        assertEq(messageLibRole, keccak256("MESSAGE_LIB"));
+    }
+
     function test_addMessageLib_RevertIf_CalledByNonAdmin() public {
         address prankAddress = makeAddr("prank");
         address testAddress = makeAddr("address");
