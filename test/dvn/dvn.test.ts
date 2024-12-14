@@ -1,6 +1,7 @@
 import { assert } from "chai";
 import { getProvider } from "../../src/utils/provider";
 import { getContract } from "../../src/utils/evm";
+import { decodeEventLog, Log, parseEventLogs } from "viem";
 
 describe("DVN", function() {
     it("E2E Test", async function() {
@@ -15,11 +16,11 @@ describe("DVN", function() {
         const srcProvider = getProvider(srcChainName);
         const destProvider = getProvider(destChainName);
 
-        const srcBlockNum = await srcProvider.wallet.getBlockNumber();        
+        const srcBlockNum = await srcProvider.wallet.getBlockNumber();
+        const destBlockNum = await destProvider.wallet.getBlockNumber();
         const srcDvn = await getContract(srcProvider, "DVN", srcProvider.dvn!);
         const srcOapp = await getContract(srcProvider, "MockOApp", srcProvider.mockApp!);
-        const destDvn = await getContract(destProvider, "DVN", destProvider.dvn!);
-        const destOapp = await getContract(destProvider, "MockOApp", destProvider.mockApp!);
+        const destEndpoint = await getContract(destProvider, "ILayerZeroEndpointV2", destProvider.endpoint);
 
         const fees = await srcOapp.read.quote([destProvider.eid, "Helllo"]);
 
@@ -36,11 +37,33 @@ describe("DVN", function() {
 
         assert(events.length == 1, "Tasks assigned");
 
-        await new Promise<void>((resolve, reject) => {
-            setTimeout(() => resolve(), 35000)
+        const [receiveLibraryAddress] = await destEndpoint.read.getReceiveLibrary([destProvider.mockApp!, destProvider.eid]);
+        const destReceiveLibrary = await getContract(destProvider, "ReceiveUlnBase", receiveLibraryAddress);
+        console.log(receiveLibraryAddress);
+
+        const logs = await new Promise<Log[]>((resolve, reject) => {
+            const unwatch = destReceiveLibrary.watchEvent.PayloadVerified({
+                onLogs: logs => resolve(logs),
+                fromBlock: destBlockNum,
+            });
+
+            setTimeout(() => {
+                unwatch();
+                reject();
+            }, 35000);
         });
 
-        const received = await destDvn.read.verified([events[0].args.task!])
-        assert(received, "Tasks received");
+        const decodedLog = decodeEventLog({
+            abi: destReceiveLibrary.abi,
+            data: logs[0].data,
+            topics: logs[0].topics
+        });
+
+        assert(logs.length == 1, "PayloadVerified log found");
+        assert(
+            decodedLog.eventName === 'PayloadVerified' &&
+            decodedLog.args.dvn.toLowerCase() === destProvider.dvn!.toLowerCase(),
+            "PayloadVerified log correct"
+        );
     });
 });
