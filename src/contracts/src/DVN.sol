@@ -7,12 +7,15 @@ import { PacketV1Codec } from "@layerzerolabs/lz-evm-protocol-v2/contracts/messa
 import { IReceiveUlnE2 } from "@layerzerolabs/lz-evm-messagelib-v2/contracts/uln/interfaces/IReceiveUlnE2.sol";
 import { ERC1967Utils } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Utils.sol";
 import { UUPSUpgradeable } from "@openzeppelin/contracts/proxy/utils/UUPSUpgradeable.sol";
+import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol";
 import "hardhat/console.sol";
 
-contract DVN is ILayerZeroDVN, UUPSUpgradeable {
+contract DVN is ILayerZeroDVN, UUPSUpgradeable, AccessControl {
     using PacketV1Codec for bytes;
 
     address _endpoint;
+
+    bytes32 public MESSAGE_LIB_ROLE = keccak256("MessageLib");
 
     event TaskAssigned(
         uint32 indexed dstEid,
@@ -59,12 +62,12 @@ contract DVN is ILayerZeroDVN, UUPSUpgradeable {
     function assignJob(
         AssignJobParam calldata task_,
         bytes calldata /*_options*/
-    ) external payable onlyProxy returns (uint256) {
+    ) external payable onlyProxy onlyRole(MESSAGE_LIB_ROLE) returns (uint256) {
         emit TaskAssigned(task_.dstEid, task_.confirmations, task_);
         return 0;
     }
 
-    function verify(AssignJobParam calldata task_) external onlyProxy {
+    function verify(AssignJobParam calldata task_) external onlyProxy onlyAdmin {
         bytes calldata packetHeader_ = task_.packetHeader;
         address receiver_ = _bytes32ToAddress(packetHeader_.receiver());
 
@@ -89,7 +92,18 @@ contract DVN is ILayerZeroDVN, UUPSUpgradeable {
         return 0;
     }
 
-    /** UUPS Proxy Functions */
+    /** AccessControl overrides */
 
+    function grantRole(bytes32 role, address account) public override onlyAdmin onlyProxy {
+        _grantRole(role, account);
+    }
+
+    function revokeRole(bytes32 role, address account) public override onlyAdmin onlyProxy {
+        _revokeRole(role, account);
+    }
+
+    /** UUPSUpgradeable Functions */
+
+    // Authorizes upgradeToAndCall() from UUPSUpgradeable
     function _authorizeUpgrade(address /*newImplementation*/) internal view override onlyAdmin {}
 }
