@@ -15,14 +15,27 @@ export function getProvider(name: string) {
     const endpoint = process.env[name + "_ENDPOINT_ADDRESS"] as Hex;
     const dvnAddress = process.env[name + "_DVN_ADDRESS"] as Hex;
     const oappAddress = process.env[name + "_OAPP_ADDRESS"] as Hex;
+    const messageLibs = [
+        process.env[name + "_MESSAGE_LIB_SEND_ULN_301"],
+        process.env[name + "_MESSAGE_LIB_SEND_ULN_302"]
+    ] as Hex[];
     
     assert(adminPrivateKey);
     assert(rpcUrl);
     assert(chainId);
     assert(eid);
     assert(endpoint);
+    assert(messageLibs[0]);
+    assert(messageLibs[1]);
 
-    const provider = new ProviderWrapper(adminPrivateKey, rpcUrl, chainId, endpoint, eid);
+    const provider = new ProviderWrapper(
+        adminPrivateKey,
+        rpcUrl,
+        chainId,
+        endpoint,
+        eid,
+        messageLibs
+    );
     if ( dvnAddress ) provider.dvn = dvnAddress;
     if ( oappAddress ) provider.mockApp = oappAddress;
 
@@ -35,13 +48,15 @@ export class ProviderWrapper {
     private _eid: number;
     private _dvn: Hex | undefined;
     private _mockApp: Hex | undefined;
+    private _messageLibs: Hex[];
 
     constructor(
         privateKey: Hex,
         rpcUrl: string,
         chain: Chain | number,
         endpoint: Hex,
-        eid: number
+        eid: number,
+        messageLibs: Hex[]
     ) {
         chain = (typeof chain === 'number' ? getMockChain(chain) : chain);
 
@@ -53,6 +68,7 @@ export class ProviderWrapper {
 
         this._endpoint = endpoint;
         this._eid = eid;
+        this._messageLibs = messageLibs;
     }
 
     get wallet() {
@@ -77,6 +93,10 @@ export class ProviderWrapper {
 
     get mockApp() {
         return this._mockApp;
+    }
+
+    get messageLibs() {
+        return this._messageLibs;
     }
 
     set dvn( dvn: Hex | undefined ) {

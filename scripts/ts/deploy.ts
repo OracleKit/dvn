@@ -16,6 +16,12 @@ async function main(chains: string[]) {
                     hash: await dvnContract.write.setEndpoint([provider.endpoint])
                 });
 
+                for ( const messageLib of provider.messageLibs ) {
+                    await provider.wallet.waitForTransactionReceipt({
+                        hash: await dvnContract.write.addMessageLib([messageLib])
+                    });
+                }
+
                 provider.dvn = proxy;
                 provider.mockApp = oapp;
             }
