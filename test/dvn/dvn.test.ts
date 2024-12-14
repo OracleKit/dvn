@@ -39,7 +39,6 @@ describe("DVN", function() {
 
         const [receiveLibraryAddress] = await destEndpoint.read.getReceiveLibrary([destProvider.mockApp!, destProvider.eid]);
         const destReceiveLibrary = await getContract(destProvider, "ReceiveUlnBase", receiveLibraryAddress);
-        console.log(receiveLibraryAddress);
 
         const logs = await new Promise<Log[]>((resolve, reject) => {
             const unwatch = destReceiveLibrary.watchEvent.PayloadVerified({
