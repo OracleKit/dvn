@@ -27,6 +27,7 @@ fn test_hello_world() {
     let mut requests = requests_collection.filter_by_rpc(&rpc_url);
     requests.sort_by_key(|&request| request.data[0].data.as_u64());
     
+    // TODO: Will panics be caught in cron jobs where we can't await calls?
     pic.await_call(msg_id).unwrap();
 
     assert_eq!(requests.len(), 1);
