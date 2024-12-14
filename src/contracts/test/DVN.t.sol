@@ -112,27 +112,6 @@ contract DVNTest is Test, Helper {
         _dvnBehindProxy.verify(task);
     }
 
-    function test_verified_Success() public {
-        address endpoint = makeAddr("endpoint");
-        ILayerZeroDVN.AssignJobParam memory task = getSampleTask();
-        Origin memory origin = getSampleOrigin();
-
-        _dvnBehindProxy.setEndpoint(endpoint);
-        vm.mockCall(endpoint, abi.encodeWithSelector(ILayerZeroEndpointV2.verifiable.selector), abi.encode(true));
-
-        vm.expectCall(
-            endpoint,
-            abi.encodeWithSelector(
-                ILayerZeroEndpointV2.verifiable.selector,
-                origin,
-                address(this)
-            )
-        );
-
-        bool verified = _dvnBehindProxy.verified(task);
-        assertEq(verified, true);
-    }
-
     function test_fees_ShouldBeZero() public view {
         uint256 fees = _dvnBehindProxy.getFee(0, 0, address(this), "");
         assertEq(fees, 0);

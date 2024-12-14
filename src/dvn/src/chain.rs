@@ -52,7 +52,7 @@ impl ChainState {
 
         let tasks_filter = self.dvn.jobs_filter(
             BlockNumber::Number(from_block.into()),
-            BlockNumber::Finalized
+            BlockNumber::Latest
         );
 
         let logs_receipt = self.provider.logs(tasks_filter);
