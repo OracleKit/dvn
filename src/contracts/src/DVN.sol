@@ -15,8 +15,6 @@ contract DVN is ILayerZeroDVN, UUPSUpgradeable, AccessControl {
 
     address _endpoint;
 
-    bytes32 public MESSAGE_LIB_ROLE = keccak256("MessageLib");
-
     event TaskAssigned(
         uint32 indexed dstEid,
         uint64 indexed numConfirmations,
@@ -24,6 +22,7 @@ contract DVN is ILayerZeroDVN, UUPSUpgradeable, AccessControl {
     );
 
     error Unauthorized();
+    error Unimplemented();
 
     modifier onlyAdmin() {
         if ( msg.sender != ERC1967Utils.getAdmin() ) {
@@ -55,6 +54,18 @@ contract DVN is ILayerZeroDVN, UUPSUpgradeable, AccessControl {
         return _endpoint;
     }
 
+    function MESSAGE_LIB_ROLE() public view onlyProxy returns (bytes32) {
+        return keccak256("MESSAGE_LIB");
+    }
+
+    function addMessageLib(address lib_) external onlyProxy onlyAdmin {
+        _grantRole(MESSAGE_LIB_ROLE(), lib_);
+    }
+
+    function removeMessageLib(address lib_) external onlyProxy onlyAdmin {
+        _revokeRole(MESSAGE_LIB_ROLE(), lib_);
+    }
+
     function _bytes32ToAddress(bytes32 _b) internal pure returns (address) {
         return address(uint160(uint256(_b)));
     }
@@ -62,7 +73,7 @@ contract DVN is ILayerZeroDVN, UUPSUpgradeable, AccessControl {
     function assignJob(
         AssignJobParam calldata task_,
         bytes calldata /*_options*/
-    ) external payable onlyProxy onlyRole(MESSAGE_LIB_ROLE) returns (uint256) {
+    ) external payable onlyProxy onlyRole(MESSAGE_LIB_ROLE()) returns (uint256) {
         emit TaskAssigned(task_.dstEid, task_.confirmations, task_);
         return 0;
     }
@@ -94,12 +105,12 @@ contract DVN is ILayerZeroDVN, UUPSUpgradeable, AccessControl {
 
     /** AccessControl overrides */
 
-    function grantRole(bytes32 role, address account) public override onlyAdmin onlyProxy {
-        _grantRole(role, account);
+    function grantRole(bytes32, address) public pure override {
+        revert Unimplemented();
     }
 
-    function revokeRole(bytes32 role, address account) public override onlyAdmin onlyProxy {
-        _revokeRole(role, account);
+    function revokeRole(bytes32, address) public pure override {
+        revert Unimplemented();
     }
 
     /** UUPSUpgradeable Functions */
