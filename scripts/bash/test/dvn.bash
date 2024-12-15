@@ -6,4 +6,4 @@ source $DIRNAME/common.bash
 setup_trap_handlers
 
 export POCKET_IC_BIN=$(pwd)/.sink/bin/pocket-ic
-cargo test
+RUSTFLAGS="$RUSTFLAGS -A dead_code -A unused_imports" cargo test
