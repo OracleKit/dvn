@@ -3,6 +3,7 @@ use std::{collections::HashMap, time::Duration};
 use ethers_core::utils::hex::ToHexExt;
 use state::GlobalState;
 use task::Task;
+use utils::guard_caller_is_controller;
 
 mod contracts;
 mod state;
@@ -13,6 +14,7 @@ mod task;
 mod transaction;
 mod nonce;
 mod gas;
+mod utils;
 
 async fn _process_tasks() {
     let num_chains = GlobalState::num_chains();
@@ -38,14 +40,14 @@ async fn _process_tasks() {
     }
 }
 
-#[ic_cdk::update]
+#[ic_cdk::update(guard = "guard_caller_is_controller")]
 async fn process_tasks() {
     ic_cdk::println!("{:?}", ic_cdk::api::instruction_counter());
     _process_tasks().await;
     ic_cdk::println!("{:?}", ic_cdk::api::instruction_counter());
 }
 
-#[ic_cdk::update]
+#[ic_cdk::update(guard = "guard_caller_is_controller")]
 async fn init() {
     GlobalState::init().await;
 
@@ -55,12 +57,12 @@ async fn init() {
     );
 }
 
-#[ic_cdk::update]
+#[ic_cdk::update(guard = "guard_caller_is_controller")]
 async fn add_chain(rpc_url: String, chain_id: u64, endpoint_id: u64, dvn_address: String) {
     GlobalState::add_chain(rpc_url, chain_id, endpoint_id, dvn_address).await;
 }
 
-#[ic_cdk::query]
+#[ic_cdk::query(guard = "guard_caller_is_controller")]
 async fn address() -> String {
     GlobalState::signer().address().encode_hex_with_prefix()
 }

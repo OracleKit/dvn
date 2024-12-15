@@ -1,5 +1,7 @@
-use common::{get_signer_address, rpc_request_loop, setup_pic, submit_init_call, submit_setup_chain_call, ChainStateMachineFactory};
+use candid::{decode_args, encode_args};
+use common::{encode_add_chain_args, get_admin_principal, rpc_request_loop, setup_pic, ChainStateMachineFactory};
 use ethers_core::types::Address;
+use pocket_ic::WasmResult;
 use std::str::FromStr;
 
 mod common;
@@ -8,11 +10,22 @@ mod common;
 fn test_hello_world() {
     let (pic, canister_id) = setup_pic();
 
-    let msg_id = submit_init_call(&pic, canister_id);
-    pic.tick(); pic.tick();
-    pic.await_call(msg_id).unwrap();
+    pic.update_call(
+        canister_id.clone(),
+        get_admin_principal(),
+        "init",
+        encode_args(()).unwrap()
+    ).unwrap();
 
-    let address = get_signer_address(&pic, canister_id);
+    let WasmResult::Reply(address) = pic.query_call(
+        canister_id.clone(),
+        get_admin_principal(),
+        "address",
+        encode_args(()).unwrap()
+    ).unwrap() else { panic!("Address query failed!") };
+
+    let (address,) = decode_args::<(String,)>(&address).unwrap();
+    let address = Address::from_str(&address).unwrap();
 
     let mut state_machine_factory = ChainStateMachineFactory::new(
         address,
@@ -21,7 +34,17 @@ fn test_hello_world() {
 
     let chain = state_machine_factory.create();
     let rpc_url = chain.url().clone();
-    let msg_id = submit_setup_chain_call(&pic, canister_id, &chain);
+    let msg_id = pic.submit_call(
+        canister_id,
+        get_admin_principal(),
+        "add_chain",
+        encode_add_chain_args(
+            &chain.url(),
+            chain.chain_id(),
+            chain.endpoint_id(),
+            chain.contract()
+        )
+    ).unwrap();
 
     let requests_collection = rpc_request_loop(&pic, &mut state_machine_factory).unwrap();
     let mut requests = requests_collection.filter_by_rpc(&rpc_url);
