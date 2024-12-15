@@ -9,7 +9,7 @@ import { IAccessControl } from "@openzeppelin/contracts/access/IAccessControl.so
 import { ERC1967Utils } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Utils.sol";
 import { IERC1967 } from "@openzeppelin/contracts/interfaces/IERC1967.sol";
 
-contract MessageLibTest is Helper, Test {
+contract MessageLibRoleTest is Helper, Test {
     function setUp() public {
         _dvn = new DVN();
         _proxy = new DVNProxy(address(_dvn));
@@ -32,7 +32,7 @@ contract MessageLibTest is Helper, Test {
         _dvnBehindProxy.revokeRole(messageLibRole, testAddress);
     }
 
-    function test_MESSAGE_LIB_ROLE_SetCorrectly() public {
+    function test_MESSAGE_LIB_ROLE_SetCorrectly() public view {
         bytes32 messageLibRole = _dvnBehindProxy.MESSAGE_LIB_ROLE();
         assertEq(messageLibRole, keccak256("MESSAGE_LIB"));
     }

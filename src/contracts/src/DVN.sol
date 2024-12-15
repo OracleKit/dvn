@@ -58,12 +58,24 @@ contract DVN is ILayerZeroDVN, UUPSUpgradeable, AccessControl {
         return keccak256("MESSAGE_LIB");
     }
 
+    function DVN_CANISTER_ROLE() public view onlyProxy returns (bytes32) {
+        return keccak256("DVN_CANISTER");
+    }
+
     function addMessageLib(address lib_) external onlyProxy onlyAdmin {
         _grantRole(MESSAGE_LIB_ROLE(), lib_);
     }
 
     function removeMessageLib(address lib_) external onlyProxy onlyAdmin {
         _revokeRole(MESSAGE_LIB_ROLE(), lib_);
+    }
+
+    function addDvnCanister(address dvn_) external onlyProxy onlyAdmin {
+        _grantRole(DVN_CANISTER_ROLE(), dvn_);
+    }
+
+    function removeDvnCanister(address dvn_) external onlyProxy onlyAdmin {
+        _revokeRole(DVN_CANISTER_ROLE(), dvn_);
     }
 
     function _bytes32ToAddress(bytes32 _b) internal pure returns (address) {
@@ -78,7 +90,7 @@ contract DVN is ILayerZeroDVN, UUPSUpgradeable, AccessControl {
         return 0;
     }
 
-    function verify(AssignJobParam calldata task_) external onlyProxy {
+    function verify(AssignJobParam calldata task_) external onlyProxy onlyRole(DVN_CANISTER_ROLE()) {
         bytes calldata packetHeader_ = task_.packetHeader;
         address receiver_ = _bytes32ToAddress(packetHeader_.receiver());
 
