@@ -1,9 +1,11 @@
+import { Hex } from "viem";
 import { deployContract, getContract } from "../../src/utils/evm";
 import { getProvider } from "../../src/utils/provider";
 import { setSuiteEnv } from "./utils";
 
 async function main(chains: string[]) {
     const providers = chains.map(chain => getProvider(chain));
+    const dvnAddress = process.env.DVN_CANISTER_ADDRESS! as Hex;
 
     await Promise.all(
         providers.map(
@@ -21,6 +23,10 @@ async function main(chains: string[]) {
                         hash: await dvnContract.write.addMessageLib([messageLib])
                     });
                 }
+
+                await provider.wallet.waitForTransactionReceipt({
+                    hash: await dvnContract.write.addDvnCanister([dvnAddress])
+                });
 
                 provider.dvn = proxy;
                 provider.mockApp = oapp;

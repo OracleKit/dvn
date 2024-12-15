@@ -49,9 +49,15 @@ dest_chain_rpc_ssl_url="https://localhost:$(( BASE_PORT + 4 ))/"
 eth_fund_account $src_chain_name $(( BASE_PORT + 1 )) $admin_address
 eth_fund_account $dest_chain_name $(( BASE_PORT + 2 )) $admin_address
 
+# deploy canister
+dfx_start $BASE_PORT
+dfx_deploy_dvn
+dvn_address=$(dfx_get_dvn_address)
+
 # deploy dvn and oapp
 export ADMIN_ADDRESS=$admin_address
 export ADMIN_PRIVATE_KEY=$admin_private_key
+export DVN_CANISTER_ADDRESS=$dvn_address
 export "${src_chain_name_caps}_RPC_URL=$src_chain_rpc_url"
 export "${dest_chain_name_caps}_RPC_URL=$dest_chain_rpc_url"
 npx ts-node ./scripts/ts/deploy.ts $src_chain_name $dest_chain_name
@@ -62,14 +68,11 @@ src_chain_oapp_address=$(eth_get_chain_env $src_chain_name_caps "OAPP_ADDRESS")
 dest_chain_dvn_address=$(eth_get_chain_env $dest_chain_name_caps "DVN_ADDRESS")
 dest_chain_oapp_address=$(eth_get_chain_env $dest_chain_name_caps "OAPP_ADDRESS")
 
-# start chains
-dfx_start $BASE_PORT
-dfx_deploy_dvn
+# add chains to canister
 dfx_add_dvn_chain $src_chain_rpc_ssl_url $src_chain_id $src_chain_eid $src_chain_dvn_address
 dfx_add_dvn_chain $dest_chain_rpc_ssl_url $dest_chain_id $dest_chain_eid $dest_chain_dvn_address
 
 # fund dvn
-dvn_address=$(dfx_get_dvn_address)
 eth_fund_account $src_chain_name $(( BASE_PORT + 1 )) $dvn_address
 eth_fund_account $dest_chain_name $(( BASE_PORT + 2 )) $dvn_address
 

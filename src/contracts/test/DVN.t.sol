@@ -20,11 +20,10 @@ contract DVNTest is Test, Helper {
         _dvnBehindProxy = DVN(address(_proxy));
     }
     
-    function test_assignJob_RevertIf_CalledByAdmin() public {
-        address endpoint = makeAddr("endpoint");
+    function test_assignJob_RevertIf_NotCalledByMessageLib() public {
         address messageLib = makeAddr("messageLib");
+        address endpoint = makeAddr("endpoint");
         bytes32 messageLibRole = _dvnBehindProxy.MESSAGE_LIB_ROLE();
-
         _dvnBehindProxy.setEndpoint(endpoint);
         _dvnBehindProxy.addMessageLib(messageLib);
 
@@ -38,25 +37,7 @@ contract DVNTest is Test, Helper {
         _dvnBehindProxy.assignJob(getSampleTask(), "");
     }
 
-    function test_assignJob_RevertIf_CalledByEndpoint() public {
-        address endpoint = makeAddr("endpoint");
-        address messageLib = makeAddr("messageLib");
-        bytes32 messageLibRole = _dvnBehindProxy.MESSAGE_LIB_ROLE();
-        _dvnBehindProxy.setEndpoint(endpoint);
-        _dvnBehindProxy.addMessageLib(messageLib);
-
-        vm.prank(endpoint);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                IAccessControl.AccessControlUnauthorizedAccount.selector,
-                endpoint,
-                messageLibRole
-            )
-        );
-        _dvnBehindProxy.assignJob(getSampleTask(), "");
-    }
-
-    function test_assignJob_CalledByMessageLib() public {
+    function test_assignJob_Success() public {
         address endpoint = makeAddr("endpoint");
         address messageLib = makeAddr("messageLib");
         _dvnBehindProxy.setEndpoint(endpoint);
@@ -71,21 +52,33 @@ contract DVNTest is Test, Helper {
         assertEq(fees, 0);
     }
 
-    // function test_verify_RevertIf_UnauthorizedVerifyAttempt() public {
-    //     address pranker = makeAddr("pranker");
-    //     ILayerZeroDVN.AssignJobParam memory task = getSampleTask();
+    function test_verify_RevertIf_NotCalledByDvn() public {
+        address dvnCanister = makeAddr("dvnCanister");
+        address endpoint = makeAddr("endpoint");
+        bytes32 dvnCanisterRole = _dvnBehindProxy.DVN_CANISTER_ROLE();
+        _dvnBehindProxy.setEndpoint(endpoint);
+        _dvnBehindProxy.addDvnCanister(dvnCanister);
 
-    //     vm.prank(pranker);
-    //     vm.expectRevert(DVN.Unauthorized.selector);
-    //     _dvnBehindProxy.verify(task);
-    // }
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IAccessControl.AccessControlUnauthorizedAccount.selector,
+                address(this),
+                dvnCanisterRole
+            )
+        );
+        _dvnBehindProxy.verify(getSampleTask());
+    }
 
     function test_verify_SuccessfulVerify() public {
         address endpoint = makeAddr("endpoint");
+        address dvnCanister = makeAddr("dvnCanister");
         address receiverLib = makeAddr("receiverLib");
         ILayerZeroDVN.AssignJobParam memory task = getSampleTask();
 
         _dvnBehindProxy.setEndpoint(endpoint);
+        _dvnBehindProxy.addDvnCanister(dvnCanister);
+
+        vm.prank(dvnCanister);
 
         vm.mockCall(endpoint, abi.encodeWithSelector(IMessageLibManager.getReceiveLibrary.selector), abi.encode(receiverLib, false));
         vm.mockCall(receiverLib, abi.encodeWithSelector(IReceiveUlnE2.verify.selector), "");
