@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "license": "MIT",
   "scripts": {
-    "setup": "bash ./scripts/bash/wrapper.bash ./scripts/bash/setup.bash",
+    "setup": "bash ./scripts/bash/setup.bash",
     "build:dvn": "bash ./scripts/bash/wrapper.bash ./scripts/bash/build/dvn.bash",
     "build:contracts": "bash ./scripts/bash/wrapper.bash ./scripts/bash/build/contracts.bash",
     "suite:new": "bash ./scripts/bash/wrapper.bash ./scripts/bash/suite/new.bash",

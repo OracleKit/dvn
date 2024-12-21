@@ -16,9 +16,10 @@ function _terminate_trap {
     exit $exit_code
 }
 
+# [EXIT_CODE]
 function terminate {
     _terminate_trap
-    exit
+    exit $1
 }
 
 function setup_trap_handlers {

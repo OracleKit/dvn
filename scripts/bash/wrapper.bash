@@ -18,7 +18,7 @@ if [ -f $USER_ENV_FILE ]; then
     source_env $USER_ENV_FILE
 else
     echo "Didn't find env file"
-    terminate
+    terminate 1
 fi
 
 if [ -f $SUITE_GENERATED_ENV_FILE ]; then
