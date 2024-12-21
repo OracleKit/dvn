@@ -51,6 +51,6 @@ function eth_fund_account {
         echo "Account funded" | pretty_log_term $1
     else
         echo "Account funding failed" | pretty_log_term $1
-        terminate
+        terminate 1
     fi
 }

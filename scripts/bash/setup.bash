@@ -1,4 +1,5 @@
 set -e
+set -o pipefail
 
 DIRNAME=$(dirname $0)
 source $DIRNAME/common.bash

@@ -34,6 +34,10 @@ function dfx_get_dvn_address {
     dfx canister call dvn address | awk -F'"' '{ print $2 }'
 }
 
+function dfx_get_canister_id {
+    dfx canister id dvn
+}
+
 # Usage: [RPC_URL] [CHAIN_ID] [ENDPOINT_ID] [DVN_ADDRESS]
 function dfx_add_dvn_chain {
     dfx canister call dvn add_chain "(\"$1\", $2, $3, \"$4\")" 2>&1
