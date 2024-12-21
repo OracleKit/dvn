@@ -33,6 +33,6 @@ while read -r chain; do
     port_offset=$(( port_offset + 2 ))
 done <<< "$chains"
 
-echo "Suite ready." | pretty_log_term bash
+echo "Suite ready." | pretty_log bash
 
 wait

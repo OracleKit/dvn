@@ -14,8 +14,8 @@
     "deploy:contracts": "bash ./scripts/bash/wrapper.bash ./scripts/bash/deploy/contracts.bash",
     "deploy:dvn": "bash ./scripts/bash/wrapper.bash ./scripts/bash/deploy/dvn.bash",
     "test:contracts": "forge test",
-    "test:dvn": "bash ./scripts/bash/test/dvn.bash",
-    "test:e2e": "bash ./scripts/bash/test/e2e.bash"
+    "test:dvn": "bash ./scripts/bash/wrapper.bash  ./scripts/bash/test/dvn.bash",
+    "test:e2e": "bash ./scripts/bash/wrapper.bash  ./scripts/bash/test/e2e.bash"
   },
   "devDependencies": {
     "@layerzerolabs/lz-evm-messagelib-v2": "^3.0.1",
