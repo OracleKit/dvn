@@ -1,58 +1,37 @@
-set -e
-
-DIRNAME=$(dirname $(dirname $0))
-source $DIRNAME/eth.bash
-source $DIRNAME/dfx.bash
-source $DIRNAME/ssl.bash
-source $DIRNAME/log.bash
-source $DIRNAME/common.bash
-
-# Load configs
-source_env $USER_CONFIG_ENV_FILE
-
-function setup_admin_wallet {
-    wallet=$(new_wallet)
-    address=$(echo $wallet | awk '{ print $1 }')
-    private_key=$(echo $wallet | awk '{ print $2 }')
-
-    echo "ADMIN_ADDRESS=$address" >> $SUITE_GENERATED_ENV_FILE
-    echo "ADMIN_PRIVATE_KEY=$private_key" >> $SUITE_GENERATED_ENV_FILE
-
-    source_env $SUITE_GENERATED_ENV_FILE
-}
-
-function start_chains {
-    chains=$(cat $SUITE_CHAINS_LIST_FILE)
-    port=$BASE_PORT
-
-    while read -r chain; do
-        start_chain $chain $port
-        start_ssl_proxy $port $(( port + 1 ))
-        fund_account $chain $port $ADMIN_ADDRESS
-
-        chain=$(echo $chain | tr '[:lower:]' '[:upper:]')
-        echo "$(echo $chain)_RPC_URL=http://localhost:$port" >> $SUITE_GENERATED_ENV_FILE
-        echo "$(echo $chain)_RPC_SSL_URL=https://localhost:$(( port + 1 ))" >> $SUITE_GENERATED_ENV_FILE
-
-        port=$(( port + 2 ))
-    done <<< "$chains"
-
-    source_env $SUITE_GENERATED_ENV_FILE
-}
-
-setup_trap_handlers
-
-# Setup suite directories and env files
-setup_directories
-clear_logs
+# reset configs
 renew_file $SUITE_GENERATED_ENV_FILE
-renew_file $DEPLOYED_ENV_LOCAL_FILE
 
-source_env $SUITE_CHAINS_ENV_FILE
-setup_admin_wallet
-start_dfx 42000
-echo "DFX_URL=http://localhost:42000" >> $SUITE_GENERATED_ENV_FILE
-start_chains
+# setup admin
+admin_wallet=$(eth_new_wallet)
+export ADMIN_ADDRESS=$(echo $admin_wallet | awk -F' ' '{ print $1 }')
+export ADMIN_PRIVATE_KEY=$(echo $admin_wallet | awk -F' ' '{ print $2 }')
+echo "ADMIN_ADDRESS=$ADMIN_ADDRESS" >> $SUITE_GENERATED_ENV_FILE
+echo "ADMIN_PRIVATE_KEY=$ADMIN_PRIVATE_KEY" >> $SUITE_GENERATED_ENV_FILE
+
+# start dfx
+dfx_start $BASE_PORT
+export DFX_URL="http://localhost:$BASE_PORT"
+echo "DFX_URL=$DFX_PORT" >> $SUITE_GENERATED_ENV_FILE
+
+# start chains
+chains=$(cat $SUITE_CHAINS_LIST_FILE)
+port_offset=1
+while read -r chain; do
+    rpc_port=$(( BASE_PORT + port_offset ))
+    ssl_port=$(( BASE_PORT + port_offset + 1 ))
+
+    eth_start_chain $chain $rpc_port
+    ssl_start_proxy $rpc_port $ssl_port
+    eth_fund_account $chain $rpc_port $ADMIN_ADDRESS
+
+    chain=$(echo $chain | tr '[:lower:]' '[:upper:]')
+    export "${chain}_RPC_URL=http://localhost:$rpc_port"
+    export "${chain}_RPC_SSL_URL=https://localhost:$ssl_port"
+    echo "${chain}_RPC_URL=http://localhost:$rpc_port" >> $SUITE_GENERATED_ENV_FILE
+    echo "${chain}_RPC_SSL_URL=https://localhost:$ssl_port" >> $SUITE_GENERATED_ENV_FILE
+
+    port_offset=$(( port_offset + 2 ))
+done <<< "$chains"
 
 echo "Suite ready." | pretty_log_term bash
 

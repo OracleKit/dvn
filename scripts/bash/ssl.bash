@@ -18,5 +18,5 @@ function ssl_start_proxy {
     while grep "Started proxy: https://localhost:$2" $SSL_LOG_FILE >/dev/null 2>&1; do
         sleep .1
     done
-    echo "Started ssl proxy for port $1" | ssl_pretty_log_term
+    echo "Started ssl proxy for port $1->$2" | ssl_pretty_log_term
 }
