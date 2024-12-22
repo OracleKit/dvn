@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{ops::DerefMut, sync::Arc};
 use ethers_core::types::U256;
 use futures::lock::{Mutex, OwnedMutexGuard};
 
@@ -30,9 +30,7 @@ impl NonceManager {
     }
 
     pub fn commit(&mut self) {
-        let guard = self.lock_guard.as_mut().unwrap();
-        guard.checked_add(1.into());
-        
-        self.lock_guard = None;
+        let mut guard = self.lock_guard.take().unwrap();
+        *guard.deref_mut() = guard.checked_add(1.into()).unwrap();
     }
 }

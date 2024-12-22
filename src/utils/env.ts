@@ -6,6 +6,7 @@ export type ChainConfig = {
     chainId: number,
     endpointId: number,
     endpoint: Hex,
+    messageLibs: Hex[],
     dvn: Hex | undefined,
     oapp: Hex | undefined,
 };
@@ -22,11 +23,15 @@ export function getChainConfig(name: string): ChainConfig {
     const chainId = parseInt(process.env[nameUpper + "_CHAIN_ID"]!);
     const endpointId = parseInt(process.env[nameUpper + "_ENDPOINT_ID"]!);
     const endpoint = process.env[nameUpper + "_ENDPOINT_ADDRESS"]! as Hex;
+    const messageLibs = [
+        process.env[nameUpper + "_MESSAGE_LIB_SEND_ULN_301"] as Hex,
+        process.env[nameUpper + "_MESSAGE_LIB_SEND_ULN_302"] as Hex,
+    ];
     const dvn = process.env[nameUpper + "_DVN_ADDRESS"]! as Hex;
     const oapp = process.env[nameUpper + "_OAPP_ADDRESS"]! as Hex;
 
-    if ( rpcUrl && rpcSslUrl && chainId && endpointId && endpoint ) {
-        return { rpcUrl, rpcSslUrl, chainId, endpoint, endpointId, dvn, oapp }
+    if ( rpcUrl && rpcSslUrl && chainId && endpointId && endpoint && messageLibs.length ) {
+        return { rpcUrl, rpcSslUrl, chainId, endpoint, endpointId, messageLibs, dvn, oapp }
     }
 
     throw new Error("Chain config not present");
