@@ -42,13 +42,13 @@ impl ChainState {
 
         self.provider.commit().await;
         
-        self.last_processed_block = current_block_receipt.take().as_u64();
+        self.last_processed_block = current_block_receipt.take().as_u64() - 1;
         self.nonce.update(nonce_receipt.take()).await;
         self.gas.current_fees(gas_receipt.take());
     }
 
     pub async fn check_for_tasks(&mut self) -> Vec<Task> {
-        let from_block = self.last_processed_block;
+        let from_block = self.last_processed_block + 1;
 
         let tasks_filter = self.dvn.jobs_filter(
             BlockNumber::Number(from_block.into()),
@@ -70,7 +70,7 @@ impl ChainState {
     }
 
     pub async fn process_task(&mut self, tasks: Vec<Task>) -> Vec<String> {
-        let mut txn_hashes = vec![];
+        let mut hash_receipts = vec![];
 
         for task in tasks.into_iter() {
             let nonce = self.nonce.nonce().await;
@@ -84,10 +84,16 @@ impl ChainState {
             let raw_txn = txn.sign(&self.signer).await;
 
             let hash_receipt = self.provider.send(raw_txn);
-            self.provider.commit().await;
-            txn_hashes.push(hash_receipt.take());
+            hash_receipts.push(hash_receipt);
 
             self.nonce.commit();
+        }
+
+        self.provider.commit().await;
+        
+        let mut txn_hashes = vec![];
+        for receipt in hash_receipts {
+            txn_hashes.push(receipt.take());
         }
 
         txn_hashes

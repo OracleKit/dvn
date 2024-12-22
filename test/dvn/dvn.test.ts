@@ -5,7 +5,7 @@ import { decodeEventLog, Log, parseEventLogs } from "viem";
 
 describe("DVN", function() {
     it("E2E Test", async function() {
-        this.timeout(60000);
+        this.timeout(120000);
 
         const srcChainName = process.env.SOURCE_CHAIN_NAME!;
         const destChainName = process.env.DESTINATION_CHAIN_NAME!;
@@ -24,45 +24,55 @@ describe("DVN", function() {
 
         const fees = await srcOapp.read.quote([destProvider.eid, "Helllo"]);
 
-        await srcProvider.wallet.waitForTransactionReceipt({
-            hash: (await srcOapp.write.send([destProvider.eid, ""], {
-                value: fees.nativeFee + 1000n
-            }))
-        });
+        const numTransactions = 5;
+        for ( let i = 0; i < numTransactions; i++ ) {
+            await srcProvider.wallet.waitForTransactionReceipt({
+                hash: (await srcOapp.write.send([destProvider.eid, ""], {
+                    value: fees.nativeFee + 1000n
+                }))
+            });
+        }
 
         const events = await srcDvn.getEvents.TaskAssigned({}, {
             fromBlock: srcBlockNum,
             toBlock: 'latest'
         });
 
-        assert(events.length == 1, "Tasks assigned");
+        assert(events.length == numTransactions, "Tasks assigned");
 
         const [receiveLibraryAddress] = await destEndpoint.read.getReceiveLibrary([destProvider.mockApp!, destProvider.eid]);
         const destReceiveLibrary = await getContract(destProvider, "ReceiveUlnBase", receiveLibraryAddress);
 
         const logs = await new Promise<Log[]>((resolve, reject) => {
+            let foundLogs: Log[] = [];
+
             const unwatch = destReceiveLibrary.watchEvent.PayloadVerified({
-                onLogs: logs => resolve(logs),
+                onLogs: logs => foundLogs = foundLogs.concat(logs),
                 fromBlock: destBlockNum,
             });
 
             setTimeout(() => {
                 unwatch();
-                reject();
-            }, 35000);
+                resolve(foundLogs);
+            }, 60000);
         });
 
-        const decodedLog = decodeEventLog({
-            abi: destReceiveLibrary.abi,
-            data: logs[0].data,
-            topics: logs[0].topics
-        });
+        console.log(logs);
 
-        assert(logs.length == 1, "PayloadVerified log found");
-        assert(
-            decodedLog.eventName === 'PayloadVerified' &&
-            decodedLog.args.dvn.toLowerCase() === destProvider.dvn!.toLowerCase(),
-            "PayloadVerified log correct"
-        );
+        assert(logs.length == numTransactions, "PayloadVerified log found");
+
+        for ( const log of logs ) {
+            const decodedLog = decodeEventLog({
+                abi: destReceiveLibrary.abi,
+                data: log.data,
+                topics: log.topics
+            });
+    
+            assert(
+                decodedLog.eventName === 'PayloadVerified' &&
+                decodedLog.args.dvn.toLowerCase() === destProvider.dvn!.toLowerCase(),
+                "PayloadVerified log correct"
+            );
+        }
     });
 });

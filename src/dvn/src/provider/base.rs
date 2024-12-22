@@ -17,7 +17,7 @@ struct Request<'a, T: Serialize> {
 #[allow(dead_code)]
 #[derive(Debug, Deserialize)]
 struct ResponseError {
-    code: u128,
+    code: i128,
     message: String
 }
 
