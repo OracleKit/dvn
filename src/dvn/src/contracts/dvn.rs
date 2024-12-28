@@ -48,32 +48,36 @@ impl DVN {
 
             let mut dest_chain: Option<u64> = None;
             let mut message: Option<Token> = None;
+            let mut gas: Option<U256> = None;
             for param in parsed_log.params.into_iter() {
                 if param.name.as_str() == "dstEid" {
                     if let Token::Uint(v) = param.value {
                         dest_chain = Some(v.as_u64());
                     }
-                }
-
-                if param.name.as_str() == "task" {
+                } else if param.name.as_str() == "task" {
                     message = Some(param.value);
+                } else if param.name.as_str() == "gas" {
+                    if let Token::Uint(v) = param.value {
+                        gas = Some(v);
+                    }
                 }
             }
 
             Task {
                 src_chain: self.chain,
                 dest_chain: dest_chain.unwrap(),
+                gas: gas.unwrap(),
                 message: message.unwrap()
             }
         })
     }
 
-    pub fn verify_config(&self, job: Task) -> FunctionExecConfig {
+    pub fn verify_config(&self, job: &Task) -> FunctionExecConfig {
         ABI.with(|abi| {
             let data = BaseContract::function_data(
                 abi,
                 "verify", 
-                &[job.message]
+                &[job.message.clone()]
             );
 
             FunctionExecConfig {

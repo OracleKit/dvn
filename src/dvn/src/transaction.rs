@@ -1,18 +1,19 @@
 use ethers_core::types::{transaction::eip2718::TypedTransaction, Bytes, Eip1559TransactionRequest, U256};
-use crate::{contracts::{FunctionExecConfig, DVN}, gas::GasManager, signer::Signer};
+use crate::{contracts::{FunctionExecConfig, DVN}, gas::GasManager, signer::Signer, task::Task};
 
 pub struct Transaction {
-    txn: Eip1559TransactionRequest
+    txn: Eip1559TransactionRequest,
+    task: Task
 }
 
 impl Transaction {
-    pub fn new(config: FunctionExecConfig) -> Self {
+    pub fn new(config: FunctionExecConfig, task: Task) -> Self {
         let txn = 
             Eip1559TransactionRequest::new()
                 .data(config.data)
                 .gas(config.gas);
 
-        Self { txn }
+        Self { txn, task }
     }
 
     pub fn contract(&mut self, contract: &DVN) {
@@ -21,7 +22,7 @@ impl Transaction {
     }
 
     pub fn gas(&mut self, gas_manager: &GasManager) {
-        let config = gas_manager.predicted_fees();
+        let config = gas_manager.predicted_fees(&self.task);
         self.txn.max_fee_per_gas = Some(config.max_fees);
         self.txn.max_priority_fee_per_gas = Some(config.max_priority_fees);
     }
