@@ -35,11 +35,8 @@ impl Signer {
         let hash = transaction.sighash().as_bytes().to_vec();
         let (result,) = sign_with_ecdsa(SignWithEcdsaArgument {
             message_hash: hash.clone(),
-            derivation_path: vec![],
-            key_id: EcdsaKeyId {
-                curve: EcdsaCurve::Secp256k1,
-                name: "dfx_test_key".to_string()
-            }
+            derivation_path: self.derivation_path.clone(),
+            key_id: self.key_id.clone()
         }).await.unwrap();
         let raw_signature = result.signature;
         let recoverable_signature = RecoverableSignature::from_slice(&raw_signature).unwrap();

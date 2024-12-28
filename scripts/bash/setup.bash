@@ -27,3 +27,8 @@ fi
 if [ ! -f localhost.pem ] || [ ! -f localhost-key.pem ]; then
     mkcert localhost
 fi
+
+# Check for candid-extractor
+if ! candid-extractor --version; then
+    cargo install candid-extractor
+fi

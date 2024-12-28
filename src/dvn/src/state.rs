@@ -9,7 +9,13 @@ pub struct GlobalState;
 
 impl GlobalState {
     pub async fn init() {
-        let mut signer = Signer::new("dfx_test_key".to_string());
+        let key_name = if option_env!("CANISTER_PRODUCTION_BUILD").is_none() {
+            "dfx_test_key"
+        } else { 
+            "key_1"
+        };
+
+        let mut signer = Signer::new(key_name.to_string());
         signer.init().await;
         
         SIGNER.replace(Rc::new(signer));
