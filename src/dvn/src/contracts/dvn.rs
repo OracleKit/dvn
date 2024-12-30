@@ -56,7 +56,7 @@ impl DVN {
                     }
                 } else if param.name.as_str() == "task" {
                     message = Some(param.value);
-                } else if param.name.as_str() == "gas" {
+                } else if param.name.as_str() == "maxUnitGasPrice" {
                     if let Token::Uint(v) = param.value {
                         gas = Some(v);
                     }

@@ -120,8 +120,8 @@ contract DVN is ILayerZeroDVN, UUPSUpgradeable, AccessControl {
             revert Unimplemented();
         }
 
-        (uint256 fee,,, uint256 nativePriceUsd) = ILayerZeroPriceFeed(_priceFeed).estimateFeeByEid(_dstEid, priceConfig_.verifyCalldataSize, priceConfig_.verifyGas);
-        ILayerZeroPriceFeed.Price memory price = ILayerZeroPriceFeed(_priceFeed).getPrice(_dstEid);
+        (uint256 fee,,, uint256 nativePriceUsd) = ILayerZeroPriceFeed(_priceFeed).estimateFeeByEid(_dstEid % 30000, priceConfig_.verifyCalldataSize, priceConfig_.verifyGas);
+        ILayerZeroPriceFeed.Price memory price = ILayerZeroPriceFeed(_priceFeed).getPrice(_dstEid % 30000);
 
         uint256 gasFee = fee;
         uint256 premium = (fee * priceConfig_.premiumBps) / 10000;

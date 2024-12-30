@@ -19,6 +19,7 @@ export function getProvider(name: string) {
         process.env[name + "_MESSAGE_LIB_SEND_ULN_301"],
         process.env[name + "_MESSAGE_LIB_SEND_ULN_302"]
     ] as Hex[];
+    const priceFeed = process.env[name + "_PRICE_FEED"] as Hex;
     
     assert(adminPrivateKey);
     assert(rpcUrl);
@@ -27,6 +28,7 @@ export function getProvider(name: string) {
     assert(endpoint);
     assert(messageLibs[0]);
     assert(messageLibs[1]);
+    assert(priceFeed);
 
     const provider = new ProviderWrapper(
         adminPrivateKey,
@@ -34,7 +36,8 @@ export function getProvider(name: string) {
         chainId,
         endpoint,
         eid,
-        messageLibs
+        messageLibs,
+        priceFeed
     );
     if ( dvnAddress ) provider.dvn = dvnAddress;
     if ( oappAddress ) provider.mockApp = oappAddress;
@@ -49,6 +52,7 @@ export class ProviderWrapper {
     private _dvn: Hex | undefined;
     private _mockApp: Hex | undefined;
     private _messageLibs: Hex[];
+    private _priceFeed: Hex;
 
     constructor(
         privateKey: Hex,
@@ -56,7 +60,8 @@ export class ProviderWrapper {
         chain: Chain | number,
         endpoint: Hex,
         eid: number,
-        messageLibs: Hex[]
+        messageLibs: Hex[],
+        priceFeed: Hex
     ) {
         chain = (typeof chain === 'number' ? getMockChain(chain) : chain);
 
@@ -69,6 +74,7 @@ export class ProviderWrapper {
         this._endpoint = endpoint;
         this._eid = eid;
         this._messageLibs = messageLibs;
+        this._priceFeed = priceFeed;
     }
 
     get wallet() {
@@ -97,6 +103,10 @@ export class ProviderWrapper {
 
     get messageLibs() {
         return this._messageLibs;
+    }
+
+    get priceFeed() {
+        return this._priceFeed;
     }
 
     set dvn( dvn: Hex | undefined ) {

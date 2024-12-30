@@ -93,7 +93,7 @@ contract FeeTest is Helper, Test {
             priceFeed,
             abi.encodeWithSelector(
                 ILayerZeroPriceFeed.estimateFeeByEid.selector,
-                dstEid,
+                dstEid % 30000,
                 verifyCalldataSize,
                 verifyGas
             ),
@@ -109,7 +109,7 @@ contract FeeTest is Helper, Test {
             priceFeed,
             abi.encodeWithSelector(
                 ILayerZeroPriceFeed.getPrice.selector,
-                dstEid
+                dstEid % 30000
             ),
             abi.encode(
                 ILayerZeroPriceFeed.Price(1, gasPrice, gasPerByte)

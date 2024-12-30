@@ -57,8 +57,6 @@ describe("DVN", function() {
             }, 60000);
         });
 
-        console.log(logs);
-
         assert(logs.length == numTransactions, "PayloadVerified log found");
 
         for ( const log of logs ) {

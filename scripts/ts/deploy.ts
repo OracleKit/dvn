@@ -14,18 +14,25 @@ async function main(chains: string[]) {
                 const proxy = await deployContract(provider, "DVNProxy", [dvn]);
                 const oapp = await deployContract(provider, "MockOApp", [provider.endpoint, proxy]);
                 const dvnContract = await getContract(provider, "DVN", proxy);
+                const messageLibRole = await dvnContract.read.MESSAGE_LIB_ROLE();
+                const dvnCanisterRole = await dvnContract.read.DVN_CANISTER_ROLE();
+
                 await provider.wallet.waitForTransactionReceipt({
                     hash: await dvnContract.write.setEndpoint([provider.endpoint])
                 });
 
+                await provider.wallet.waitForTransactionReceipt({
+                    hash: await dvnContract.write.setPriceFeed([provider.priceFeed])
+                });
+
                 for ( const messageLib of provider.messageLibs ) {
                     await provider.wallet.waitForTransactionReceipt({
-                        hash: await dvnContract.write.addMessageLib([messageLib])
+                        hash: await dvnContract.write.grantRole([messageLibRole, messageLib])
                     });
                 }
 
                 await provider.wallet.waitForTransactionReceipt({
-                    hash: await dvnContract.write.addDvnCanister([dvnAddress])
+                    hash: await dvnContract.write.grantRole([dvnCanisterRole, dvnAddress])
                 });
 
                 provider.dvn = proxy;
@@ -42,14 +49,38 @@ async function main(chains: string[]) {
                         async providerB => {
                             const oappA = await getContract(providerA, "MockOApp", providerA.mockApp!);
                             const oappB = await getContract(providerB, "MockOApp", providerB.mockApp!);
+                            const dvnA = await getContract(providerA, "DVN", providerA.dvn!);
+                            const dvnB = await getContract(providerB, "DVN", providerB.dvn!);
 
                             await Promise.all([
-                                providerA.wallet.waitForTransactionReceipt({
-                                    hash: await oappA.write.initPeer([ providerB.eid, providerB.mockApp! ])
-                                }),
-                                providerB.wallet.waitForTransactionReceipt({
-                                    hash: await oappB.write.initPeer([ providerA.eid, providerA.mockApp! ])
-                                })
+                                (async () => {
+                                    await providerA.wallet.waitForTransactionReceipt({
+                                        hash: await oappA.write.initPeer([ providerB.eid, providerB.mockApp! ])
+                                    });
+                                    await providerA.wallet.waitForTransactionReceipt({
+                                        hash: await dvnA.write.setPriceConfig([{
+                                            dstEid: providerB.eid,
+                                            premiumBps: 2000,
+                                            canisterFeeInUSD: BigInt(1e20 * 0.1),
+                                            verifyGas: 80000n,
+                                            verifyCalldataSize: 1000n,
+                                        }])
+                                    });
+                                })(),
+                                (async () => {
+                                    await providerB.wallet.waitForTransactionReceipt({
+                                        hash: await oappB.write.initPeer([ providerA.eid, providerA.mockApp! ])
+                                    });
+                                    await providerB.wallet.waitForTransactionReceipt({
+                                        hash: await dvnB.write.setPriceConfig([{
+                                            dstEid: providerA.eid,
+                                            premiumBps: 2000,
+                                            canisterFeeInUSD: BigInt(1e20 * 0.1),
+                                            verifyGas: 80000n,
+                                            verifyCalldataSize: 1000n,
+                                        }])
+                                    });
+                                })()
                             ]);
                         }
                     )

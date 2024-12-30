@@ -65,6 +65,16 @@
   },
   {
     "inputs": [],
+    "name": "FeeCalculationWentWrong",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidRole",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "UUPSUnauthorizedCallContext",
     "type": "error"
   },
@@ -87,6 +97,16 @@
   {
     "inputs": [],
     "name": "Unimplemented",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "WithdrawAmountInvalid",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "WithdrawNotFromMessageLib",
     "type": "error"
   },
   {
@@ -199,6 +219,12 @@
         "type": "uint64"
       },
       {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "maxUnitGasPrice",
+        "type": "uint256"
+      },
+      {
         "components": [
           {
             "internalType": "uint32",
@@ -263,6 +289,19 @@
   },
   {
     "inputs": [],
+    "name": "DVN_CANISTER_ROLE",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "MESSAGE_LIB_ROLE",
     "outputs": [
       {
@@ -288,16 +327,16 @@
     "type": "function"
   },
   {
-    "inputs": [
+    "inputs": [],
+    "name": "admin",
+    "outputs": [
       {
         "internalType": "address",
-        "name": "lib_",
+        "name": "",
         "type": "address"
       }
     ],
-    "name": "addMessageLib",
-    "outputs": [],
-    "stateMutability": "nonpayable",
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -353,7 +392,7 @@
   },
   {
     "inputs": [],
-    "name": "getAdmin",
+    "name": "endpoint",
     "outputs": [
       {
         "internalType": "address",
@@ -366,12 +405,12 @@
   },
   {
     "inputs": [],
-    "name": "getEndpoint",
+    "name": "feeCollected",
     "outputs": [
       {
-        "internalType": "address",
+        "internalType": "uint256",
         "name": "",
-        "type": "address"
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -381,7 +420,7 @@
     "inputs": [
       {
         "internalType": "uint32",
-        "name": "",
+        "name": "dstEid_",
         "type": "uint32"
       },
       {
@@ -434,18 +473,18 @@
     "inputs": [
       {
         "internalType": "bytes32",
-        "name": "",
+        "name": "role",
         "type": "bytes32"
       },
       {
         "internalType": "address",
-        "name": "",
+        "name": "account",
         "type": "address"
       }
     ],
     "name": "grantRole",
     "outputs": [],
-    "stateMutability": "pure",
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -473,6 +512,65 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "eid_",
+        "type": "uint256"
+      }
+    ],
+    "name": "priceConfig",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint32",
+            "name": "dstEid",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint16",
+            "name": "premiumBps",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint256",
+            "name": "canisterFeeInUSD",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "verifyGas",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "verifyCalldataSize",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct DVN.PriceConfig",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "priceFeed",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "proxiableUUID",
     "outputs": [
@@ -483,19 +581,6 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "lib_",
-        "type": "address"
-      }
-    ],
-    "name": "removeMessageLib",
-    "outputs": [],
-    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -520,18 +605,18 @@
     "inputs": [
       {
         "internalType": "bytes32",
-        "name": "",
+        "name": "role",
         "type": "bytes32"
       },
       {
         "internalType": "address",
-        "name": "",
+        "name": "account",
         "type": "address"
       }
     ],
     "name": "revokeRole",
     "outputs": [],
-    "stateMutability": "pure",
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -556,6 +641,59 @@
       }
     ],
     "name": "setEndpoint",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint32",
+            "name": "dstEid",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint16",
+            "name": "premiumBps",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint256",
+            "name": "canisterFeeInUSD",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "verifyGas",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "verifyCalldataSize",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct DVN.PriceConfig",
+        "name": "priceConfig_",
+        "type": "tuple"
+      }
+    ],
+    "name": "setPriceConfig",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "priceFeed_",
+        "type": "address"
+      }
+    ],
+    "name": "setPriceFeed",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -632,53 +770,30 @@
         "type": "tuple"
       }
     ],
-    "name": "verified",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
+    "name": "verify",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
     "inputs": [
       {
-        "components": [
-          {
-            "internalType": "uint32",
-            "name": "dstEid",
-            "type": "uint32"
-          },
-          {
-            "internalType": "bytes",
-            "name": "packetHeader",
-            "type": "bytes"
-          },
-          {
-            "internalType": "bytes32",
-            "name": "payloadHash",
-            "type": "bytes32"
-          },
-          {
-            "internalType": "uint64",
-            "name": "confirmations",
-            "type": "uint64"
-          },
-          {
-            "internalType": "address",
-            "name": "sender",
-            "type": "address"
-          }
-        ],
-        "internalType": "struct ILayerZeroDVN.AssignJobParam",
-        "name": "task_",
-        "type": "tuple"
+        "internalType": "address",
+        "name": "from_",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "to_",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount_",
+        "type": "uint256"
       }
     ],
-    "name": "verify",
+    "name": "withdrawFee",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
