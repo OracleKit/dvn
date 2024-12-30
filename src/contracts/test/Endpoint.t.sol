@@ -29,7 +29,7 @@ contract EndpointTest is Helper, Test {
         address endpoint = makeAddr("endpoint");
 
         _dvnBehindProxy.setEndpoint(endpoint);
-        address setEndpoint = _dvnBehindProxy.getEndpoint();
+        address setEndpoint = _dvnBehindProxy.endpoint();
         assertEq(setEndpoint, endpoint);
     }
 }

@@ -16,8 +16,8 @@ contract AdminTest is Helper, Test {
         _dvnBehindProxy = DVN(address(_proxy));
     }
 
-    function test_getAdmin_defaultAdminIsCreator() public view {
-        address admin = _dvnBehindProxy.getAdmin();
+    function test_admin_defaultAdminIsCreator() public view {
+        address admin = _dvnBehindProxy.admin();
         assertEq(admin, address(this));
     }
 
@@ -42,7 +42,7 @@ contract AdminTest is Helper, Test {
         emit IERC1967.AdminChanged(address(this), testAddress);
         _dvnBehindProxy.setAdmin(testAddress);
 
-        address admin = _dvnBehindProxy.getAdmin();
+        address admin = _dvnBehindProxy.admin();
         assertEq(admin, testAddress);
     }
 
@@ -71,7 +71,7 @@ contract AdminTest is Helper, Test {
         emit IERC1967.AdminChanged(testAddressA, testAddressB);
         _dvnBehindProxy.setAdmin(testAddressB);
 
-        address admin = _dvnBehindProxy.getAdmin();
+        address admin = _dvnBehindProxy.admin();
         assertEq(admin, testAddressB);
     }
 }

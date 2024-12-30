@@ -13,6 +13,7 @@ abstract contract Helper {
     DVN _dvn;
     DVNProxy _proxy;
     DVN _dvnBehindProxy;
+    address _priceFeed;
 
     function getSampleTask() internal view returns (ILayerZeroDVN.AssignJobParam memory) {
         Packet memory packet;

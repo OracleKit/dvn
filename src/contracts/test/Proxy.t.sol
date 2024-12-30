@@ -53,7 +53,7 @@ contract ProxyTest is Helper, Test {
         vm.prank(testAdmin);
         _dvnBehindProxy.upgradeToAndCall(address(newDVN), "");
 
-        address admin = _dvnBehindProxy.getAdmin();
+        address admin = _dvnBehindProxy.admin();
         assertEq(admin, testAdmin);
     }
 

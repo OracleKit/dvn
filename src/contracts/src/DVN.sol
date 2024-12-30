@@ -20,7 +20,7 @@ contract DVN is ILayerZeroDVN, UUPSUpgradeable, AccessControl {
     struct PriceConfig {
         uint32 dstEid;
         uint16 premiumBps;
-        uint128 canisterFeeInUSD; // uses PriceRatioDenominator
+        uint256 canisterFeeInUSD; // uses PriceRatioDenominator
         uint256 verifyGas;
         uint256 verifyCalldataSize;
     }
@@ -43,6 +43,7 @@ contract DVN is ILayerZeroDVN, UUPSUpgradeable, AccessControl {
     error WithdrawNotFromMessageLib();
     error WithdrawAmountInvalid();
     error FeeCalculationWentWrong();
+    error InvalidRole();
 
     modifier onlyAdmin() {
         if ( msg.sender != ERC1967Utils.getAdmin() ) {
@@ -63,6 +64,10 @@ contract DVN is ILayerZeroDVN, UUPSUpgradeable, AccessControl {
         return _priceFeed;
     }
 
+    function priceConfig(uint256 eid_) external view onlyProxy returns (PriceConfig memory) {
+        return _dstEidPriceConfigs[eid_];
+    }
+
     function feeCollected() external view onlyProxy onlyAdmin returns (uint256) {
         return _feeCollected;
     }
@@ -79,11 +84,28 @@ contract DVN is ILayerZeroDVN, UUPSUpgradeable, AccessControl {
         _priceFeed = priceFeed_;
     }
 
+    function setPriceConfig(PriceConfig calldata priceConfig_) external onlyProxy onlyAdmin {
+        _dstEidPriceConfigs[priceConfig_.dstEid] = priceConfig_;
+    }
+
+    function _isValidRole(bytes32 role) internal pure {
+        if (
+            MESSAGE_LIB_ROLE == role ||
+            DVN_CANISTER_ROLE == role
+        ) {
+            return;
+        }
+        
+        revert InvalidRole();
+    }
+
     function grantRole(bytes32 role, address account) public override onlyProxy onlyAdmin {
+        _isValidRole(role);
         _grantRole(role, account);
     }
 
     function revokeRole(bytes32 role, address account) public override onlyProxy onlyAdmin {
+        _isValidRole(role);
         _revokeRole(role, account);
     }
 
@@ -92,18 +114,18 @@ contract DVN is ILayerZeroDVN, UUPSUpgradeable, AccessControl {
     }
 
     function _calculateFee(uint32 _dstEid) internal view returns (uint256 unitGasPrice, uint256 totalFee) {
-        PriceConfig memory priceConfig = _dstEidPriceConfigs[_dstEid];
+        PriceConfig memory priceConfig_ = _dstEidPriceConfigs[_dstEid];
         
-        if ( priceConfig.dstEid == 0 ) {
+        if ( priceConfig_.dstEid == 0 ) {
             revert Unimplemented();
         }
 
-        (uint256 fee,,, uint256 nativePriceUsd) = ILayerZeroPriceFeed(_priceFeed).estimateFeeByEid(_dstEid, priceConfig.verifyCalldataSize, priceConfig.verifyGas);
+        (uint256 fee,,, uint256 nativePriceUsd) = ILayerZeroPriceFeed(_priceFeed).estimateFeeByEid(_dstEid, priceConfig_.verifyCalldataSize, priceConfig_.verifyGas);
         ILayerZeroPriceFeed.Price memory price = ILayerZeroPriceFeed(_priceFeed).getPrice(_dstEid);
 
         uint256 gasFee = fee;
-        uint256 premium = (fee * priceConfig.premiumBps) / 10000;
-        uint256 canisterFee = (priceConfig.canisterFeeInUSD  * 1e18) / nativePriceUsd;
+        uint256 premium = (fee * priceConfig_.premiumBps) / 10000;
+        uint256 canisterFee = (priceConfig_.canisterFeeInUSD  * 1e18) / nativePriceUsd;
         totalFee = gasFee + premium + canisterFee;
         unitGasPrice = price.gasPriceInUnit;
     }
