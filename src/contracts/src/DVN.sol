@@ -27,6 +27,7 @@ contract DVN is ILayerZeroDVN, UUPSUpgradeable, AccessControl {
 
     address _endpoint;
     address _priceFeed;
+    uint256 _feeCollected;
 
     mapping(uint256 => PriceConfig) _dstEidPriceConfigs;
 
@@ -39,6 +40,9 @@ contract DVN is ILayerZeroDVN, UUPSUpgradeable, AccessControl {
 
     error Unauthorized();
     error Unimplemented();
+    error WithdrawNotFromMessageLib();
+    error WithdrawAmountInvalid();
+    error FeeCalculationWentWrong();
 
     modifier onlyAdmin() {
         if ( msg.sender != ERC1967Utils.getAdmin() ) {
@@ -57,6 +61,10 @@ contract DVN is ILayerZeroDVN, UUPSUpgradeable, AccessControl {
 
     function priceFeed() external view onlyProxy returns (address) {
         return _priceFeed;
+    }
+
+    function feeCollected() external view onlyProxy onlyAdmin returns (uint256) {
+        return _feeCollected;
     }
 
     function setAdmin(address newAdmin) external onlyProxy onlyAdmin {
@@ -105,6 +113,9 @@ contract DVN is ILayerZeroDVN, UUPSUpgradeable, AccessControl {
         bytes calldata /*_options*/
     ) external payable onlyProxy onlyRole(MESSAGE_LIB_ROLE) returns (uint256) {
         (uint256 unitGasPrice, uint256 totalFee) = _calculateFee(task_.dstEid);
+        if ( unitGasPrice <= 0 || totalFee <= 0 ) revert FeeCalculationWentWrong();
+
+        _feeCollected += totalFee;
         emit TaskAssigned(task_.dstEid, task_.confirmations, unitGasPrice, task_);
         return totalFee;
     }
@@ -124,11 +135,15 @@ contract DVN is ILayerZeroDVN, UUPSUpgradeable, AccessControl {
         bytes calldata /*_options*/
     ) external view onlyProxy returns (uint256) {
         (,uint256 totalFee) = _calculateFee(dstEid_);
+        if ( totalFee <= 0 ) revert FeeCalculationWentWrong();
         return totalFee;
     }
 
-    function withdraw(address from_, address to_, uint256 amount_) external onlyProxy onlyAdmin {
-        if ( !hasRole(MESSAGE_LIB_ROLE, from_) ) revert Unauthorized();
+    function withdrawFee(address from_, address to_, uint256 amount_) external onlyProxy onlyAdmin {
+        if ( !hasRole(MESSAGE_LIB_ROLE, from_) ) revert WithdrawNotFromMessageLib();
+        if ( amount_ <= 0 || amount_ > _feeCollected ) revert WithdrawAmountInvalid();
+
+        _feeCollected -= amount_;
         ISendLib(from_).withdrawFee(to_, amount_);
     }
 
