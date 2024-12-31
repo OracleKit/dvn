@@ -12,12 +12,22 @@ import { IMessageLibManager } from "@layerzerolabs/lz-evm-protocol-v2/contracts/
 import { IReceiveUlnE2 } from "@layerzerolabs/lz-evm-messagelib-v2/contracts/uln/interfaces/IReceiveUlnE2.sol";
 import { Helper } from "./Helper.sol";
 import { IAccessControl } from "@openzeppelin/contracts/access/IAccessControl.sol";
+import { ISendLib } from "@layerzerolabs/lz-evm-protocol-v2/contracts/interfaces/ISendLib.sol";
+import { ILayerZeroPriceFeed } from "@layerzerolabs/lz-evm-messagelib-v2/contracts/interfaces/ILayerZeroPriceFeed.sol";
 
 contract DVNTest is Test, Helper {
     function setUp() public {
         _dvn = new DVN();
         _proxy = new DVNProxy(address(_dvn));
         _dvnBehindProxy = DVN(address(_proxy));
+        _priceFeed = makeAddr("priceFeed");
+
+        ILayerZeroDVN.AssignJobParam memory task = getSampleTask();
+        _dvnBehindProxy.setPriceConfig(DVN.PriceConfig(task.dstEid, 2000, 0, 100, 0));
+        _dvnBehindProxy.setPriceFeed(_priceFeed);
+
+        vm.mockCall(_priceFeed, abi.encodeWithSelector(ILayerZeroPriceFeed.estimateFeeByEid.selector), abi.encode(1, 1, 1, 1));
+        vm.mockCall(_priceFeed, abi.encodeWithSelector(ILayerZeroPriceFeed.getPrice.selector), abi.encode(ILayerZeroPriceFeed.Price(1, 1, 1)));
     }
     
     function test_assignJob_RevertIf_NotCalledByMessageLib() public {
@@ -25,7 +35,7 @@ contract DVNTest is Test, Helper {
         address endpoint = makeAddr("endpoint");
         bytes32 messageLibRole = _dvnBehindProxy.MESSAGE_LIB_ROLE();
         _dvnBehindProxy.setEndpoint(endpoint);
-        _dvnBehindProxy.addMessageLib(messageLib);
+        _dvnBehindProxy.grantRole(messageLibRole, messageLib);
 
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -41,15 +51,23 @@ contract DVNTest is Test, Helper {
         address endpoint = makeAddr("endpoint");
         address messageLib = makeAddr("messageLib");
         _dvnBehindProxy.setEndpoint(endpoint);
-        _dvnBehindProxy.addMessageLib(messageLib);
+        _dvnBehindProxy.grantRole(_dvnBehindProxy.MESSAGE_LIB_ROLE(), messageLib);
 
         ILayerZeroDVN.AssignJobParam memory task = getSampleTask();
+        uint256 predictedFees = _dvnBehindProxy.getFee(task.dstEid, task.confirmations, task.sender, "");
         
         vm.prank(messageLib);
         vm.expectEmit(address(_dvnBehindProxy));
-        emit DVN.TaskAssigned(task.dstEid, task.confirmations, task);
+        emit DVN.TaskAssigned(task.dstEid, task.confirmations, 1, task);
         uint256 fees = _dvnBehindProxy.assignJob(task, "");
-        assertEq(fees, 0);
+        assertEq(fees, predictedFees);
+
+        uint256 collectedFees = _dvnBehindProxy.feeCollected();
+        assertEq(collectedFees, predictedFees);
+
+        vm.mockCall(messageLib, abi.encodeWithSelector(ISendLib.withdrawFee.selector), "");
+        vm.expectCall(messageLib, abi.encodeWithSelector(ISendLib.withdrawFee.selector, address(this), predictedFees));
+        _dvnBehindProxy.withdrawFee(messageLib, address(this), predictedFees);
     }
 
     function test_verify_RevertIf_NotCalledByDvn() public {
@@ -57,7 +75,7 @@ contract DVNTest is Test, Helper {
         address endpoint = makeAddr("endpoint");
         bytes32 dvnCanisterRole = _dvnBehindProxy.DVN_CANISTER_ROLE();
         _dvnBehindProxy.setEndpoint(endpoint);
-        _dvnBehindProxy.addDvnCanister(dvnCanister);
+        _dvnBehindProxy.grantRole(dvnCanisterRole, dvnCanister);
 
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -74,9 +92,10 @@ contract DVNTest is Test, Helper {
         address dvnCanister = makeAddr("dvnCanister");
         address receiverLib = makeAddr("receiverLib");
         ILayerZeroDVN.AssignJobParam memory task = getSampleTask();
+        bytes32 dvnCanisterRole = _dvnBehindProxy.DVN_CANISTER_ROLE();
 
         _dvnBehindProxy.setEndpoint(endpoint);
-        _dvnBehindProxy.addDvnCanister(dvnCanister);
+        _dvnBehindProxy.grantRole(dvnCanisterRole, dvnCanister);
 
         vm.prank(dvnCanister);
 
@@ -103,10 +122,5 @@ contract DVNTest is Test, Helper {
         );
 
         _dvnBehindProxy.verify(task);
-    }
-
-    function test_fees_ShouldBeZero() public view {
-        uint256 fees = _dvnBehindProxy.getFee(0, 0, address(this), "");
-        assertEq(fees, 0);
     }
 }

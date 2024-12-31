@@ -8,6 +8,7 @@ import { Test$Type } from "../../artifacts/src/contracts/src/Test.sol/Test";
 import { DVNProxy$Type } from "../../artifacts/src/contracts/src/DVNProxy.sol/DVNProxy";
 import { ILayerZeroEndpointV2$Type } from "../../artifacts/@layerzerolabs/lz-evm-protocol-v2/contracts/interfaces/ILayerZeroEndpointV2.sol/ILayerZeroEndpointV2"
 import { ReceiveUlnBase$Type } from "../../artifacts/@layerzerolabs/lz-evm-messagelib-v2/contracts/uln/ReceiveUlnBase.sol/ReceiveUlnBase"
+import { ILayerZeroPriceFeed$Type } from "../../artifacts/@layerzerolabs/lz-evm-messagelib-v2/contracts/interfaces/ILayerZeroPriceFeed.sol/ILayerZeroPriceFeed";
 
 export type ContractArtifacts = {
     DVN: DVN$Type,
@@ -18,6 +19,7 @@ export type ContractArtifacts = {
     Test: Test$Type,
     ILayerZeroEndpointV2: ILayerZeroEndpointV2$Type,
     ReceiveUlnBase: ReceiveUlnBase$Type,
+    ILayerZeroPriceFeed: ILayerZeroPriceFeed$Type
 };
 
 export const ContractArtifactsPaths = {
@@ -29,6 +31,7 @@ export const ContractArtifactsPaths = {
     Test: "artifacts/src/contracts/src/Test.sol/Test.json",
     ILayerZeroEndpointV2: "artifacts/@layerzerolabs/lz-evm-protocol-v2/contracts/interfaces/ILayerZeroEndpointV2.sol/ILayerZeroEndpointV2.json",
     ReceiveUlnBase: "artifacts/@layerzerolabs/lz-evm-messagelib-v2/contracts/uln/ReceiveUlnBase.sol/ReceiveUlnBase.json",
+    ILayerZeroPriceFeed: "artifacts/@layerzerolabs/lz-evm-messagelib-v2/contracts/interfaces/ILayerZeroPriceFeed.sol/ILayerZeroPriceFeed.json"
 }
 
 export type Contracts = keyof ContractArtifacts;

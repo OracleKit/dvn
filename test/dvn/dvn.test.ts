@@ -1,7 +1,7 @@
 import { assert } from "chai";
 import { getProvider } from "../../src/utils/provider";
 import { getContract } from "../../src/utils/evm";
-import { decodeEventLog, Log, parseEventLogs } from "viem";
+import { decodeEventLog, Hex, Log, parseEventLogs } from "viem";
 
 describe("DVN", function() {
     it("E2E Test", async function() {
@@ -9,6 +9,7 @@ describe("DVN", function() {
 
         const srcChainName = process.env.SOURCE_CHAIN_NAME!;
         const destChainName = process.env.DESTINATION_CHAIN_NAME!;
+        const dvnAddress = process.env.DVN_CANISTER_ADDRESS as Hex;
 
         assert(srcChainName, "Source chain env present");
         assert(destChainName, "Destination chain env present");
@@ -21,8 +22,11 @@ describe("DVN", function() {
         const srcDvn = await getContract(srcProvider, "DVN", srcProvider.dvn!);
         const srcOapp = await getContract(srcProvider, "MockOApp", srcProvider.mockApp!);
         const destEndpoint = await getContract(destProvider, "ILayerZeroEndpointV2", destProvider.endpoint);
+        const srcPriceFeed = await getContract(srcProvider, "ILayerZeroPriceFeed", srcProvider.priceFeed);
 
         const fees = await srcOapp.read.quote([destProvider.eid, "Helllo"]);
+
+        const dvnBalanceBeforeTxns = await destProvider.wallet.getBalance({ address: dvnAddress });
 
         const numTransactions = 5;
         for ( let i = 0; i < numTransactions; i++ ) {
@@ -57,8 +61,6 @@ describe("DVN", function() {
             }, 60000);
         });
 
-        console.log(logs);
-
         assert(logs.length == numTransactions, "PayloadVerified log found");
 
         for ( const log of logs ) {
@@ -74,5 +76,11 @@ describe("DVN", function() {
                 "PayloadVerified log correct"
             );
         }
+
+        const dvnBalanceAfterTxns = await destProvider.wallet.getBalance({ address: dvnAddress });
+        const dvnCollectedFees = await srcDvn.read.feeCollected();
+        const { priceRatio } = await srcPriceFeed.read.getPrice([destProvider.eid % 30000]);
+        
+        assert(dvnBalanceAfterTxns + ((dvnCollectedFees * BigInt(1e20)) / priceRatio) > dvnBalanceBeforeTxns, "DVN balance increased");
     });
 });

@@ -74,9 +74,9 @@ impl ChainState {
 
         for task in tasks.into_iter() {
             let nonce = self.nonce.nonce().await;
-            let exec_config = self.dvn.verify_config(task);
+            let exec_config = self.dvn.verify_config(&task);
 
-            let mut txn = Transaction::new(exec_config);
+            let mut txn = Transaction::new(exec_config, task);
             txn.contract(&self.dvn);
             txn.gas(&self.gas);
             txn.nonce(&nonce);
