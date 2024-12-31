@@ -80,8 +80,7 @@ describe("DVN", function() {
         const dvnBalanceAfterTxns = await destProvider.wallet.getBalance({ address: dvnAddress });
         const dvnCollectedFees = await srcDvn.read.feeCollected();
         const { priceRatio } = await srcPriceFeed.read.getPrice([destProvider.eid % 30000]);
-
-        console.log(dvnBalanceAfterTxns, dvnCollectedFees, dvnBalanceBeforeTxns, priceRatio, dvnBalanceAfterTxns + ((dvnCollectedFees * BigInt(1e20)) / priceRatio));
+        
         assert(dvnBalanceAfterTxns + ((dvnCollectedFees * BigInt(1e20)) / priceRatio) > dvnBalanceBeforeTxns, "DVN balance increased");
     });
 });
