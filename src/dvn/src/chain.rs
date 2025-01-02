@@ -70,10 +70,12 @@ impl ChainState {
     }
 
     pub async fn process_task(&mut self, tasks: Vec<Task>) -> Vec<String> {
-        let mut hash_receipts = vec![];
+        let mut txn_sign_futs = vec![];
 
         for task in tasks.into_iter() {
             let nonce = self.nonce.nonce().await;
+            self.nonce.commit();
+            
             let exec_config = self.dvn.verify_config(&task);
 
             let mut txn = Transaction::new(exec_config, task);
@@ -81,12 +83,17 @@ impl ChainState {
             txn.gas(&self.gas);
             txn.nonce(&nonce);
             txn.signer(&self.signer);
-            let raw_txn = txn.sign(&self.signer).await;
 
+            let txn_sign_fut = txn.sign(&self.signer);
+            txn_sign_futs.push(txn_sign_fut);
+        }
+
+        let raw_txns = futures::future::join_all(txn_sign_futs).await;
+        let mut hash_receipts = vec![];
+
+        for raw_txn in raw_txns {
             let hash_receipt = self.provider.send(raw_txn);
             hash_receipts.push(hash_receipt);
-
-            self.nonce.commit();
         }
 
         self.provider.commit().await;
