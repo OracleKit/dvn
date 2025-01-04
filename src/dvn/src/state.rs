@@ -1,9 +1,11 @@
-use std::{cell::RefCell, ops::Index, rc::Rc};
+use std::{cell::RefCell, ops::Index, rc::Rc, sync::Arc};
+use futures::lock::{Mutex, MutexGuard, OwnedMutexGuard};
 use crate::{chain::ChainState, signer::Signer};
 
 thread_local! {
     static SIGNER: RefCell<Rc<Signer>> = RefCell::default();
     static CHAINS: RefCell<Vec<Rc<RefCell<ChainState>>>> = RefCell::default();
+    static TASK_PROBE_JOB_LOCK: Arc<Mutex<bool>> = Arc::new(Mutex::new(false));
 }
 pub struct GlobalState;
 
@@ -55,5 +57,9 @@ impl GlobalState {
             chains.borrow_mut().push(Rc::new(RefCell::new(new_chain)));
             chains.borrow().len() - 1
         })
+    }
+
+    pub fn acquire_task_probe_job_lock() -> Option<OwnedMutexGuard<bool>> {
+        TASK_PROBE_JOB_LOCK.with(|lock| lock.try_lock_owned())
     }
 }
