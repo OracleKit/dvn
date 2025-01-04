@@ -27,14 +27,14 @@ impl InnerReceipt {
 }
 
 #[derive(Default)]
-struct Request {
-    data: Box<RawValue>,
-    inner_receipt: InnerReceipt
+struct BatchRequest {
+    data: Option<Box<RawValue>>, // None when data gets collected
+    inner_receipt: Option<InnerReceipt> // None when request is fulfilled
 }
 
 #[derive(Default)]
 pub struct Batcher {
-    requests: Vec<Request>
+    requests: Vec<BatchRequest>
 }
 
 impl Batcher {
@@ -44,35 +44,50 @@ impl Batcher {
         }
     }
 
-    pub fn clear(&mut self) {
-        self.requests.clear();
-    }
-
+    // should be used in tandem with queue_request to predict the id
     pub fn next_id(&self) -> u64 {
         self.requests.len() as u64
     }
 
-    pub fn queue_request<T: DeserializeOwned>(&mut self, data: Box<RawValue>) -> GenericReceipt<T> {
-        let request = Request {
-            data,
-            inner_receipt: InnerReceipt::new()
+    pub fn queue_request<T: DeserializeOwned>(&mut self, data: Box<RawValue>) -> (GenericReceipt<T>, u64) {
+        let inner_receipt = InnerReceipt::new();
+        let receipt: GenericReceipt<T> = inner_receipt.receipt();
+
+        let request = BatchRequest {
+            data: Some(data),
+            inner_receipt: Some(inner_receipt)
         };
 
-        let receipt: GenericReceipt<T> = request.inner_receipt.receipt();
         self.requests.push(request);
 
-        receipt
+        (receipt, self.requests.len() as u64 - 1)
     }
 
-    pub fn collect_requests(&self) -> Vec<Box<RawValue>> {
+    pub fn collect_requests(&mut self) -> BatchRequestCollection {
+        BatchRequestCollection::new(self.requests.drain(..).collect())
+    }
+}
+
+pub struct BatchRequestCollection {
+    requests: Vec<BatchRequest>
+}
+
+impl BatchRequestCollection {
+    fn new(requests: Vec<BatchRequest>) -> Self {
+        Self {
+            requests
+        }
+    }
+
+    pub fn data(&mut self) -> Vec<Box<RawValue>> {
         self.requests
-            .iter()
-            .map(|request| request.data.clone())
+            .iter_mut()
+            .map(|request| request.data.take().expect("Data already collected from batch request"))
             .collect()
     }
 
-    pub fn fulfill_request(&mut self, request_id: u64, response: Box<RawValue>) {
-        let request = std::mem::take(&mut self.requests[request_id as usize]);
-        request.inner_receipt.fulfill(response);
+    pub fn fulfill(&mut self, id: u64, data: Box<RawValue>) {
+        let inner_receipt = self.requests[id as usize].inner_receipt.take().expect("Request already fulfilled");
+        inner_receipt.fulfill(data);
     }
 }
