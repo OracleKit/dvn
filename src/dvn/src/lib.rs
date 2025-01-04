@@ -18,26 +18,41 @@ mod utils;
 
 async fn _process_tasks() {
     let num_chains = GlobalState::num_chains();
-    let mut tasks_by_chain: HashMap<u64, Vec<Task>> = HashMap::new();
+    let mut check_futs = vec![];
 
     for i in 0..num_chains {
-        let chain = GlobalState::chain(i);
-        let tasks = chain.borrow_mut().check_for_tasks().await;
+        let fut = async move {
+            let chain = GlobalState::chain(i);
+            let tasks = chain.borrow_mut().check_for_tasks().await;
+            tasks
+        };
 
-        for task in tasks {
-            let chain_id = task.dest_chain;
-            if let Some(tasks_list) = tasks_by_chain.get_mut(&chain_id) {
-                tasks_list.push(task);
-            } else {
-                tasks_by_chain.insert(chain_id, vec![task]);
-            }
+        check_futs.push(fut);
+    }
+
+    let tasks: Vec<Task> = futures::future::join_all(check_futs).await.into_iter().flatten().collect();
+    let mut tasks_by_chain: HashMap<u64, Vec<Task>> = HashMap::new();
+
+    for task in tasks {
+        let chain_id = task.dest_chain;
+        if let Some(tasks_list) = tasks_by_chain.get_mut(&chain_id) {
+            tasks_list.push(task);
+        } else {
+            tasks_by_chain.insert(chain_id, vec![task]);
         }
     }
 
+    let mut process_futs = vec![];
     for (chain_id, tasks) in tasks_by_chain.into_iter() {
-        let chain = GlobalState::chain_by_id(chain_id);
-        chain.borrow_mut().process_task(tasks).await;
+        let fut = async move {
+            let chain = GlobalState::chain_by_id(chain_id);
+            chain.borrow_mut().process_tasks(tasks).await;
+        };
+
+        process_futs.push(fut);
     }
+
+    futures::future::join_all(process_futs).await;
 }
 
 #[ic_cdk::update(guard = "guard_caller_is_controller")]

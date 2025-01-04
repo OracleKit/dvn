@@ -25,26 +25,26 @@ impl Provider {
         }
     }
 
-    pub fn block_number(&mut self) -> GenericReceipt<U256> {
+    pub fn block_number(&self) -> GenericReceipt<U256> {
         self.base.issue_request("eth_blockNumber", None as Option<u8>)
     }
 
-    pub fn nonce(&mut self, account: &Address) -> GenericReceipt<U256> {
+    pub fn nonce(&self, account: &Address) -> GenericReceipt<U256> {
         self.base.issue_request("eth_getTransactionCount", Some((account.encode_hex_with_prefix(), "latest")))
     }
 
-    pub fn gas(&mut self) -> CurrentGasConfigReceipt {
+    pub fn gas(&self) -> CurrentGasConfigReceipt {
         CurrentGasConfigReceipt::new(
             self.base.issue_request("eth_gasPrice", None as Option<u8>),
             self.base.issue_request("eth_maxPriorityFeePerGas", None as Option<u8>)
         )
     }
 
-    pub fn send(&mut self, txn: Bytes) -> GenericReceipt<String> {
+    pub fn send(&self, txn: Bytes) -> GenericReceipt<String> {
         self.base.issue_request("eth_sendRawTransaction", Some((txn, )))
     }
     
-    pub fn logs(&mut self, filter: LogFilter) -> GenericReceipt<Vec<Log>> {
+    pub fn logs(&self, filter: LogFilter) -> GenericReceipt<Vec<Log>> {
         let topic_parse_fn = |topic: Topic<H256>| -> Option<ValueOrArray<Option<H256>>> {
             match topic {
                 Topic::This(h) => Some(ValueOrArray::Value(Some(h))),
@@ -67,7 +67,7 @@ impl Provider {
         self.base.issue_request("eth_getLogs", Some([filter]))
     }
 
-    pub async fn commit(&mut self) {
+    pub async fn commit(&self) {
         self.base.commit().await;
     }
 }

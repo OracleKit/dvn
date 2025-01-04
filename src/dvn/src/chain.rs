@@ -1,22 +1,22 @@
 use ethers_core::{abi::Address, types::BlockNumber};
 use crate::{contracts::DVN, gas::GasManager, nonce::NonceManager, provider::{Provider, Receipt}, signer::Signer, state::GlobalState, task::Task, transaction::Transaction};
-use std::{rc::Rc, str::FromStr};
+use std::{rc::Rc, str::FromStr, time::Duration};
 
 #[allow(dead_code)]
 pub struct ChainState {
     pub chain_id: u64,
     pub endpoint_id: u64,
-    provider: Provider,
     dvn: DVN,
     gas: GasManager,
     nonce: NonceManager,
     signer: Rc<Signer>,
+    provider: Rc<Provider>,
     last_processed_block: u64
 }
 
 impl ChainState {
     pub fn new(rpc_url: &str, chain_id: u64, endpoint_id: u64, dvn_address: &str) -> Self {
-        let provider = Provider::new(rpc_url.to_string());
+        let provider = Rc::new(Provider::new(rpc_url.to_string()));
         let dvn = DVN::new(Address::from_str(dvn_address).unwrap(), chain_id);
         let gas = GasManager::new();
         let nonce = NonceManager::new();
@@ -69,11 +69,11 @@ impl ChainState {
         tasks
     }
 
-    pub async fn process_task(&mut self, tasks: Vec<Task>) -> Vec<String> {
-        let mut hash_receipts = vec![];
+    pub async fn process_tasks(&mut self, tasks: Vec<Task>) {
+        let mut txns = vec![];
 
         for task in tasks.into_iter() {
-            let nonce = self.nonce.nonce().await;
+            let nonce = self.nonce.nonce();
             let exec_config = self.dvn.verify_config(&task);
 
             let mut txn = Transaction::new(exec_config, task);
@@ -81,21 +81,24 @@ impl ChainState {
             txn.gas(&self.gas);
             txn.nonce(&nonce);
             txn.signer(&self.signer);
-            let raw_txn = txn.sign(&self.signer).await;
-
-            let hash_receipt = self.provider.send(raw_txn);
-            hash_receipts.push(hash_receipt);
-
-            self.nonce.commit();
+            
+            txns.push(txn);
         }
 
-        self.provider.commit().await;
-        
-        let mut txn_hashes = vec![];
-        for receipt in hash_receipts {
-            txn_hashes.push(receipt.take());
-        }
+        for txn in txns {
+            let signer = Rc::clone(&self.signer);
+            let provider = Rc::clone(&self.provider);
 
-        txn_hashes
+            ic_cdk_timers::set_timer(
+                Duration::from_secs(0),
+                || {
+                    ic_cdk::spawn(async move {
+                        let raw_txn = txn.sign(&signer).await;
+                        provider.send(raw_txn);
+                        provider.commit().await;
+                    });
+                }
+            );
+        }
     }
 }
