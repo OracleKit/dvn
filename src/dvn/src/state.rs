@@ -1,5 +1,5 @@
 use std::{cell::RefCell, ops::Index, rc::Rc, sync::Arc};
-use futures::lock::{Mutex, MutexGuard, OwnedMutexGuard};
+use futures::lock::{Mutex, OwnedMutexGuard};
 use crate::{chain::ChainState, signer::Signer};
 
 thread_local! {
