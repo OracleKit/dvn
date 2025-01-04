@@ -17,6 +17,10 @@ mod gas;
 mod utils;
 
 async fn _process_tasks() {
+    let Some(_guard) = GlobalState::acquire_task_probe_job_lock() else {
+        return;
+    };
+
     let num_chains = GlobalState::num_chains();
     let mut check_futs = vec![];
 
@@ -57,9 +61,7 @@ async fn _process_tasks() {
 
 #[ic_cdk::update(guard = "guard_caller_is_controller")]
 async fn process_tasks() {
-    ic_cdk::println!("{:?}", ic_cdk::api::instruction_counter());
     _process_tasks().await;
-    ic_cdk::println!("{:?}", ic_cdk::api::instruction_counter());
 }
 
 #[ic_cdk::update(guard = "guard_caller_is_controller")]
