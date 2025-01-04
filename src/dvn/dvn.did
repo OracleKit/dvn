@@ -1,6 +1,14 @@
+type HttpHeader = record { value : text; name : text };
+type HttpResponse = record {
+  status : nat;
+  body : blob;
+  headers : vec HttpHeader;
+};
+type TransformArgs = record { context : blob; response : HttpResponse };
 service : {
   add_chain : (text, nat64, nat64, text) -> ();
   address : () -> (text) query;
   init : () -> ();
   process_tasks : () -> ();
+  transform_rpc : (TransformArgs) -> (HttpResponse) query;
 }

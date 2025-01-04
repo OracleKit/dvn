@@ -3,6 +3,7 @@ mod batch;
 mod receipt;
 
 use base::BaseProvider;
+pub use base::transform_rpc;
 pub use receipt::{CurrentGasConfigReceipt, GenericReceipt, Receipt};
 use ethers_core::{abi::{Address, Topic, TopicFilter}, types::{BlockNumber, Bytes, Filter, FilterBlockOption, Log, ValueOrArray, H256, U256}, utils::hex::ToHexExt};
 
@@ -26,22 +27,42 @@ impl Provider {
     }
 
     pub fn block_number(&self) -> GenericReceipt<U256> {
-        self.base.issue_request("eth_blockNumber", None as Option<u8>)
+        self.base.issue_request(
+            "eth_blockNumber",
+            None as Option<u8>,
+            0
+        )
     }
 
     pub fn nonce(&self, account: &Address) -> GenericReceipt<U256> {
-        self.base.issue_request("eth_getTransactionCount", Some((account.encode_hex_with_prefix(), "latest")))
+        self.base.issue_request(
+            "eth_getTransactionCount",
+            Some((account.encode_hex_with_prefix(), "latest")),
+            80
+        )
     }
 
     pub fn gas(&self) -> CurrentGasConfigReceipt {
         CurrentGasConfigReceipt::new(
-            self.base.issue_request("eth_gasPrice", None as Option<u8>),
-            self.base.issue_request("eth_maxPriorityFeePerGas", None as Option<u8>)
+            self.base.issue_request(
+                "eth_gasPrice",
+                None as Option<u8>,
+                80
+            ),
+            self.base.issue_request(
+                "eth_maxPriorityFeePerGas",
+                None as Option<u8>,
+                80
+            )
         )
     }
 
     pub fn send(&self, txn: Bytes) -> GenericReceipt<String> {
-        self.base.issue_request("eth_sendRawTransaction", Some((txn, )))
+        self.base.issue_request(
+            "eth_sendRawTransaction",
+            Some((txn, )),
+            100
+        )
     }
     
     pub fn logs(&self, filter: LogFilter) -> GenericReceipt<Vec<Log>> {
@@ -64,7 +85,11 @@ impl Provider {
             ]
         };
 
-        self.base.issue_request("eth_getLogs", Some([filter]))
+        self.base.issue_request(
+            "eth_getLogs",
+            Some([filter]),
+            8000
+        )
     }
 
     pub async fn commit(&self) {

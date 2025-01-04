@@ -1,6 +1,7 @@
 use std::{collections::HashMap, time::Duration};
 
 use ethers_core::utils::hex::ToHexExt;
+use ic_cdk::api::management_canister::http_request::{HttpResponse, TransformArgs};
 use state::GlobalState;
 use task::Task;
 use utils::guard_caller_is_controller;
@@ -82,6 +83,11 @@ async fn add_chain(rpc_url: String, chain_id: u64, endpoint_id: u64, dvn_address
 #[ic_cdk::query(guard = "guard_caller_is_controller")]
 async fn address() -> String {
     GlobalState::signer().address().encode_hex_with_prefix()
+}
+
+#[ic_cdk::query]
+fn transform_rpc(args: TransformArgs) -> HttpResponse {
+    provider::transform_rpc(args.response, args.context)
 }
 
 ic_cdk::export_candid!();
