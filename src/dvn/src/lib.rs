@@ -46,7 +46,7 @@ async fn _process_tasks() {
     for (chain_id, tasks) in tasks_by_chain.into_iter() {
         let fut = async move {
             let chain = GlobalState::chain_by_id(chain_id);
-            chain.borrow_mut().process_task(tasks).await;
+            chain.borrow_mut().process_tasks(tasks).await;
         };
 
         process_futs.push(fut);
