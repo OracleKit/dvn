@@ -35,6 +35,7 @@ struct BatchRequest {
 #[derive(Default)]
 pub struct Batcher {
     max_response_bytes: u64,
+    context: Vec<String>,
     requests: Vec<BatchRequest>
 }
 
@@ -42,6 +43,7 @@ impl Batcher {
     pub fn new() -> Self {
         Self {
             max_response_bytes: 0,
+            context: vec![],
             requests: vec![]
         }
     }
@@ -51,7 +53,7 @@ impl Batcher {
         self.requests.len() as u64
     }
 
-    pub fn queue_request<T: DeserializeOwned>(&mut self, data: Box<RawValue>, max_response_bytes: u64) -> (GenericReceipt<T>, u64) {
+    pub fn queue_request<T: DeserializeOwned>(&mut self, data: Box<RawValue>, context: String, max_response_bytes: u64) -> (GenericReceipt<T>, u64) {
         let inner_receipt = InnerReceipt::new();
         let receipt: GenericReceipt<T> = inner_receipt.receipt();
 
@@ -61,6 +63,7 @@ impl Batcher {
         };
 
         self.requests.push(request);
+        self.context.push(context);
         self.max_response_bytes += max_response_bytes;
 
         (receipt, self.requests.len() as u64 - 1)
@@ -68,22 +71,25 @@ impl Batcher {
 
     pub fn collect_requests(&mut self) -> BatchRequestCollection {
         let requests = self.requests.drain(..).collect();
+        let context = self.context.drain(..).collect();
         let max_response_bytes = self.max_response_bytes;
         self.max_response_bytes = 0;
 
-        BatchRequestCollection::new(requests, max_response_bytes)
+        BatchRequestCollection::new(requests, context, max_response_bytes)
     }
 }
 
 pub struct BatchRequestCollection {
     max_response_bytes: u64,
+    context: Vec<String>,
     requests: Vec<BatchRequest>
 }
 
 impl BatchRequestCollection {
-    fn new(requests: Vec<BatchRequest>, max_response_bytes: u64) -> Self {
+    fn new(requests: Vec<BatchRequest>, context: Vec<String>, max_response_bytes: u64) -> Self {
         Self {
             max_response_bytes,
+            context,
             requests
         }
     }
@@ -97,6 +103,10 @@ impl BatchRequestCollection {
 
     pub fn max_response_bytes(&self) -> u64 {
         self.max_response_bytes
+    }
+
+    pub fn context(&self) -> Vec<u8> {
+        serde_json::to_vec(&self.context).unwrap()
     }
 
     pub fn fulfill(&mut self, id: u64, data: Box<RawValue>) {
