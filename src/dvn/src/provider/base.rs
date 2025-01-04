@@ -76,7 +76,7 @@ impl BaseProvider {
         serde_json::from_str(response.result.unwrap().get()).unwrap()
     }
 
-    pub fn issue_request<T, R>(&self, method: &str, params: Option<T>) -> GenericReceipt<R>
+    pub fn issue_request<T, R>(&self, method: &str, params: Option<T>, max_response_bytes: u64) -> GenericReceipt<R>
     where
         T: Serialize,
         R: DeserializeOwned
@@ -91,7 +91,7 @@ impl BaseProvider {
         let payload = serde_json::to_string(payload).unwrap();
         let payload = RawValue::from_string(payload).unwrap();
 
-        let (receipt, _) = self.batcher.borrow_mut().queue_request::<R>(payload);
+        let (receipt, _) = self.batcher.borrow_mut().queue_request::<R>(payload, max_response_bytes);
         receipt
     }
 
@@ -101,10 +101,11 @@ impl BaseProvider {
         
         async move {
             let serialized_requests = serde_json::to_vec(&requests.data()).unwrap();
+            let max_response_bytes = requests.max_response_bytes();
 
             let (response, ) = http_request(CanisterHttpRequestArgument {
                 url: self.url.clone(),
-                max_response_bytes: None,
+                max_response_bytes: Some(max_response_bytes),
                 method: HttpMethod::POST,
                 headers: vec![
                     HttpHeader {
@@ -114,7 +115,7 @@ impl BaseProvider {
                 ],
                 body: Some(serialized_requests),
                 transform: None
-            }, 80_000_000_000).await.unwrap();
+            }, 1_000_000_000).await.unwrap();
             
             let responses: Vec<Response> = serde_json::from_slice(&response.body).unwrap();
             for response in responses.into_iter() {

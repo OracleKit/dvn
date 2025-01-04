@@ -34,12 +34,14 @@ struct BatchRequest {
 
 #[derive(Default)]
 pub struct Batcher {
+    max_response_bytes: u64,
     requests: Vec<BatchRequest>
 }
 
 impl Batcher {
     pub fn new() -> Self {
         Self {
+            max_response_bytes: 0,
             requests: vec![]
         }
     }
@@ -49,7 +51,7 @@ impl Batcher {
         self.requests.len() as u64
     }
 
-    pub fn queue_request<T: DeserializeOwned>(&mut self, data: Box<RawValue>) -> (GenericReceipt<T>, u64) {
+    pub fn queue_request<T: DeserializeOwned>(&mut self, data: Box<RawValue>, max_response_bytes: u64) -> (GenericReceipt<T>, u64) {
         let inner_receipt = InnerReceipt::new();
         let receipt: GenericReceipt<T> = inner_receipt.receipt();
 
@@ -59,22 +61,29 @@ impl Batcher {
         };
 
         self.requests.push(request);
+        self.max_response_bytes += max_response_bytes;
 
         (receipt, self.requests.len() as u64 - 1)
     }
 
     pub fn collect_requests(&mut self) -> BatchRequestCollection {
-        BatchRequestCollection::new(self.requests.drain(..).collect())
+        let requests = self.requests.drain(..).collect();
+        let max_response_bytes = self.max_response_bytes;
+        self.max_response_bytes = 0;
+
+        BatchRequestCollection::new(requests, max_response_bytes)
     }
 }
 
 pub struct BatchRequestCollection {
+    max_response_bytes: u64,
     requests: Vec<BatchRequest>
 }
 
 impl BatchRequestCollection {
-    fn new(requests: Vec<BatchRequest>) -> Self {
+    fn new(requests: Vec<BatchRequest>, max_response_bytes: u64) -> Self {
         Self {
+            max_response_bytes,
             requests
         }
     }
@@ -84,6 +93,10 @@ impl BatchRequestCollection {
             .iter_mut()
             .map(|request| request.data.take().expect("Data already collected from batch request"))
             .collect()
+    }
+
+    pub fn max_response_bytes(&self) -> u64 {
+        self.max_response_bytes
     }
 
     pub fn fulfill(&mut self, id: u64, data: Box<RawValue>) {
