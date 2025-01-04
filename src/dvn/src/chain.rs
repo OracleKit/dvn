@@ -73,9 +73,7 @@ impl ChainState {
         let mut txn_sign_futs = vec![];
 
         for task in tasks.into_iter() {
-            let nonce = self.nonce.nonce().await;
-            self.nonce.commit();
-            
+            let nonce = self.nonce.nonce();
             let exec_config = self.dvn.verify_config(&task);
 
             let mut txn = Transaction::new(exec_config, task);
