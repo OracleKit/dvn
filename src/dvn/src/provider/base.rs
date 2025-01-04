@@ -1,6 +1,5 @@
 use std::{cell::RefCell, future::Future};
 
-use ethers_core::types::transaction::response;
 use ic_cdk::api::management_canister::http_request::{http_request, CanisterHttpRequestArgument, HttpHeader, HttpMethod, HttpResponse, TransformContext};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use serde_json::value::RawValue;
@@ -45,36 +44,6 @@ impl BaseProvider {
             batcher: RefCell::new(Batcher::new())
         }
     } 
-
-    pub async fn request<T, R>(&self, method: &str, params: Option<T>) -> R
-        where
-            T: Serialize,
-            R: DeserializeOwned
-    {
-        let payload = serde_json::to_vec(&Request {
-            jsonrpc: "2.0",
-            id: 1,
-            method,
-            params
-        }).unwrap();
-
-        let (response, ) = http_request(CanisterHttpRequestArgument {
-            url: self.url.clone(),
-            max_response_bytes: None,
-            method: HttpMethod::POST,
-            headers: vec![
-                HttpHeader {
-                    name: "Content-Type".to_string(),
-                    value: "application/json".to_string()
-                }
-            ],
-            body: Some(payload),
-            transform: None
-        }, 80_000_000_000).await.unwrap();
-
-        let response: Response = serde_json::from_slice(&response.body).unwrap();
-        serde_json::from_str(response.result.unwrap().get()).unwrap()
-    }
 
     pub fn issue_request<T, R>(&self, method: &str, params: Option<T>, max_response_bytes: u64) -> GenericReceipt<R>
     where
