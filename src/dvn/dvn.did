@@ -6,9 +6,10 @@ type HttpResponse = record {
 };
 type TransformArgs = record { context : blob; response : HttpResponse };
 service : {
-  add_chain : (text, nat64, nat64, text) -> ();
+  add_chain : (vec text, nat64, nat64, text) -> ();
   address : () -> (text) query;
   init : () -> ();
   process_tasks : () -> ();
+  remove_chain : (nat64) -> ();
   transform_rpc : (TransformArgs) -> (HttpResponse) query;
 }

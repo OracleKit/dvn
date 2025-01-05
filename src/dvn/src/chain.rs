@@ -15,8 +15,8 @@ pub struct ChainState {
 }
 
 impl ChainState {
-    pub fn new(rpc_url: &str, chain_id: u64, endpoint_id: u64, dvn_address: &str) -> Self {
-        let provider = Rc::new(Provider::new(rpc_url.to_string()));
+    pub fn new(rpc_urls: Vec<String>, chain_id: u64, endpoint_id: u64, dvn_address: &str) -> Self {
+        let provider = Rc::new(Provider::new(rpc_urls));
         let dvn = DVN::new(Address::from_str(dvn_address).unwrap(), chain_id);
         let gas = GasManager::new();
         let nonce = NonceManager::new();
