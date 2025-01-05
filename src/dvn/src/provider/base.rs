@@ -1,4 +1,4 @@
-use std::{cell::RefCell, future::Future};
+use std::{cell::RefCell, future::Future, ops::Deref};
 
 use ic_cdk::api::management_canister::http_request::{http_request, CanisterHttpRequestArgument, HttpHeader, HttpMethod, HttpResponse, TransformContext};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
@@ -33,17 +33,27 @@ struct Response {
 
 #[derive(Default)]
 pub struct BaseProvider {
-    url: String,
+    urls: Vec<String>,
+    last_used_url: RefCell<usize>,
     batcher: RefCell<Batcher>
 }
 
 impl BaseProvider {
-    pub fn new(url: String) -> Self {
+    pub fn new(urls: Vec<String>) -> Self {
         Self {
-            url,
+            urls,
+            last_used_url: 0.into(),
             batcher: RefCell::new(Batcher::new())
         }
-    } 
+    }
+
+    fn pick_rpc_url(&self) -> String {
+        let mut last_used_url = self.last_used_url.borrow_mut();
+        let current_url = (last_used_url.deref() + 1) % self.urls.len();
+        *last_used_url = current_url;
+
+        self.urls[current_url].clone()
+    }
 
     pub fn issue_request<T, R>(&self, method: &str, params: Option<T>, max_response_bytes: u64) -> GenericReceipt<R>
     where
@@ -74,7 +84,7 @@ impl BaseProvider {
             let max_response_bytes = requests.max_response_bytes() + 500;
 
             let (response, ) = http_request(CanisterHttpRequestArgument {
-                url: self.url.clone(),
+                url: self.pick_rpc_url(),
                 max_response_bytes: Some(max_response_bytes),
                 method: HttpMethod::POST,
                 headers: vec![

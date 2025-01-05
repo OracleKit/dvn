@@ -49,8 +49,8 @@ impl GlobalState {
         })
     }
 
-    pub async fn add_chain(rpc_url: String, chain_id: u64, endpoint_id: u64, dvn_address: String) -> usize {
-        let mut new_chain = ChainState::new(&rpc_url, chain_id, endpoint_id, &dvn_address);
+    pub async fn add_chain(rpc_urls: Vec<String>, chain_id: u64, endpoint_id: u64, dvn_address: String) -> usize {
+        let mut new_chain = ChainState::new(rpc_urls, chain_id, endpoint_id, &dvn_address);
         new_chain.init().await;
 
         CHAINS.with(|chains| {

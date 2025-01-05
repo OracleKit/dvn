@@ -20,9 +20,9 @@ pub struct Provider {
 }
 
 impl Provider {
-    pub fn new(url: String) -> Self {
+    pub fn new(urls: Vec<String>) -> Self {
         Self {
-            base: BaseProvider::new(url),
+            base: BaseProvider::new(urls),
         }
     }
 

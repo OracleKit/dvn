@@ -40,7 +40,7 @@ function dfx_get_canister_id {
 
 # Usage: [RPC_URL] [CHAIN_ID] [ENDPOINT_ID] [DVN_ADDRESS]
 function dfx_add_dvn_chain {
-    dfx canister call dvn add_chain "(\"$1\", $2, $3, \"$4\")" 2>&1
+    dfx canister call dvn add_chain "(vec {\"$1\"}, $2, $3, \"$4\")" 2>&1
 }
 
 # Installs to $SINK_BIN_DIR/pocket-ic
