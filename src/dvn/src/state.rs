@@ -59,7 +59,21 @@ impl GlobalState {
         })
     }
 
-    pub fn acquire_task_probe_job_lock() -> Option<OwnedMutexGuard<bool>> {
+    pub async fn remove_chain(endpoint_id: u64) {
+        let _guard = GlobalState::acquire_task_probe_job_lock().await;
+        CHAINS.with(|chains| {
+            let mut chains = chains.borrow_mut();
+            let chain_index = chains.iter().position(|chain| chain.borrow().endpoint_id == endpoint_id).unwrap();
+            chains.remove(chain_index);
+        });
+    }
+
+    pub fn try_acquire_task_probe_job_lock() -> Option<OwnedMutexGuard<bool>> {
         TASK_PROBE_JOB_LOCK.with(|lock| lock.try_lock_owned())
+    }
+
+    pub async fn acquire_task_probe_job_lock() -> OwnedMutexGuard<bool> {
+        let lock = TASK_PROBE_JOB_LOCK.with(|lock| lock.clone());
+        lock.lock_owned().await
     }
 }

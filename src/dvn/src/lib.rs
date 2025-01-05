@@ -18,7 +18,7 @@ mod gas;
 mod utils;
 
 async fn _process_tasks() {
-    let Some(_guard) = GlobalState::acquire_task_probe_job_lock() else {
+    let Some(_guard) = GlobalState::try_acquire_task_probe_job_lock() else {
         return;
     };
 
@@ -78,6 +78,11 @@ async fn init() {
 #[ic_cdk::update(guard = "guard_caller_is_controller")]
 async fn add_chain(rpc_urls: Vec<String>, chain_id: u64, endpoint_id: u64, dvn_address: String) {
     GlobalState::add_chain(rpc_urls, chain_id, endpoint_id, dvn_address).await;
+}
+
+#[ic_cdk::update(guard = "guard_caller_is_controller")]
+async fn remove_chain(endpoint_id: u64) {
+    GlobalState::remove_chain(endpoint_id).await;
 }
 
 #[ic_cdk::query(guard = "guard_caller_is_controller")]
