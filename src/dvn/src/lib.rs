@@ -6,6 +6,7 @@ use state::GlobalState;
 use task::Task;
 use utils::guard_caller_is_controller;
 
+mod consensus;
 mod contracts;
 mod state;
 mod signer;
@@ -70,7 +71,7 @@ async fn init() {
     GlobalState::init().await;
 
     ic_cdk_timers::set_timer_interval(
-        Duration::from_secs(30), 
+        Duration::from_secs(15), 
         || ic_cdk::spawn(_process_tasks())
     );
 }

@@ -1,7 +1,9 @@
 use std::hash::Hash;
 
 use ethers_core::{abi::Token, types::U256};
+use serde::Serialize;
 
+#[derive(Serialize)]
 pub struct Task {
     #[allow(dead_code)]
     pub src_chain: u64,
