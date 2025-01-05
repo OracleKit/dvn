@@ -124,9 +124,10 @@ contract DVN is ILayerZeroDVN, UUPSUpgradeable, AccessControl {
         ILayerZeroPriceFeed.Price memory price = ILayerZeroPriceFeed(_priceFeed).getPrice(_dstEid % 30000);
 
         uint256 gasFee = fee;
-        uint256 premium = (fee * priceConfig_.premiumBps) / 10000;
         uint256 canisterFee = (priceConfig_.canisterFeeInUSD  * 1e18) / nativePriceUsd;
-        totalFee = gasFee + premium + canisterFee;
+        uint256 multiplierBps = 10000 + priceConfig_.premiumBps;
+        totalFee = gasFee + canisterFee;
+        totalFee = (totalFee * multiplierBps) / 10000;
         unitGasPrice = price.gasPriceInUnit;
     }
 
