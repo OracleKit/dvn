@@ -39,7 +39,7 @@ fn test_hello_world() {
         get_admin_principal(),
         "add_chain",
         encode_add_chain_args(
-            &chain.url(),
+            vec![&chain.url()],
             chain.chain_id(),
             chain.endpoint_id(),
             chain.contract()

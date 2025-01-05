@@ -31,7 +31,7 @@ fn reject_call_if_caller_is_not_controller() {
         canister_id,
         alice_principal,
         "add_chain",
-        encode_add_chain_args("", 0, 0, Address::random())
+        encode_add_chain_args(vec![""], 0, 0, Address::random())
     ).unwrap();
 
     match result {

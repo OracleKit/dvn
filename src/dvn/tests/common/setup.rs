@@ -27,9 +27,9 @@ pub fn setup_pic() -> (PocketIc, Principal) {
     (pic, canister)
 }
 
-pub fn encode_add_chain_args(rpc_url: &str, chain_id: u64, endpoint_id: u64, dvn_address: Address) -> Vec<u8> {
+pub fn encode_add_chain_args(rpc_urls: Vec<&str>, chain_id: u64, endpoint_id: u64, dvn_address: Address) -> Vec<u8> {
     encode_args((
-        rpc_url,
+        rpc_urls,
         chain_id,
         endpoint_id,
         dvn_address.as_bytes().encode_hex::<String>()
