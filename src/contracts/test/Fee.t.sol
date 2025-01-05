@@ -17,9 +17,8 @@ contract FeeTest is Helper, Test {
     uint64 gasPrice = 0.1 * 1e9;
     uint256 usdPrice = 6 * priceRatioDenominator;
     uint256 totalGasFee = (verifyGas + verifyCalldataSize * gasPerByte) * gasPrice;
-    uint256 premiumFee = totalGasFee * premiumBps / 1e4;
     uint256 canisterFee = (canisterFeeInUSD * 1e18) / usdPrice;
-    uint256 totalFee = totalGasFee + premiumFee + canisterFee;
+    uint256 totalFee = ((totalGasFee + canisterFee) * (1e4 + premiumBps)) / 1e4;
 
     function setUp() public {
         _dvn = new DVN();
@@ -75,8 +74,8 @@ contract FeeTest is Helper, Test {
         uint32 dstEid = 1;
 
         assertEq(totalGasFee, 1.1 * 1e13);
-        assertEq(premiumFee, 2.2 * 1e12);
         assertEq(canisterFee, 5 * 1e17);
+        assertEq(totalFee, 6000132 * 1e11);
 
         _dvnBehindProxy.setPriceConfig(
             DVN.PriceConfig(
