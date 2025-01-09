@@ -35,15 +35,23 @@ struct Response {
 pub struct BaseProvider {
     urls: Vec<String>,
     last_used_url: RefCell<usize>,
-    batcher: RefCell<Batcher>
+    batcher: RefCell<Batcher>,
+    uid: String,
+    idempotency_counter: RefCell<u128>
 }
 
 impl BaseProvider {
     pub fn new(urls: Vec<String>) -> Self {
+        let mut hasher = blake3::Hasher::new();
+        urls.iter().for_each(|url| { hasher.update(url.as_bytes()); });
+        let uid = hasher.finalize().to_string();
+
         Self {
             urls,
             last_used_url: 0.into(),
-            batcher: RefCell::new(Batcher::new())
+            batcher: RefCell::new(Batcher::new()),
+            uid,
+            idempotency_counter: RefCell::new(0)
         }
     }
 
@@ -77,6 +85,8 @@ impl BaseProvider {
     pub fn commit<'a>(&'a self) -> impl Future<Output = ()> + 'a {
         // should collect requests from batcher at the moment commit is issued
         let mut requests = self.batcher.borrow_mut().collect_requests();
+        let idempotency_index = self.idempotency_counter.borrow().clone();
+        *self.idempotency_counter.borrow_mut() += 1;
         
         async move {
             let serialized_requests = serde_json::to_vec(&requests.data()).unwrap();
@@ -91,6 +101,10 @@ impl BaseProvider {
                     HttpHeader {
                         name: "Content-Type".to_string(),
                         value: "application/json".to_string()
+                    },
+                    HttpHeader {
+                        name: "X-Idempotency-Key".to_string(),
+                        value: format!("{}-{}", self.uid.as_str(), idempotency_index)
                     }
                 ],
                 body: Some(serialized_requests),
