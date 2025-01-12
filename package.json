@@ -11,6 +11,7 @@
     "suite:list": "bash ./scripts/bash/wrapper.bash ./scripts/bash/suite/list.bash",
     "suite:start": "bash ./scripts/bash/wrapper.bash ./scripts/bash/suite/start.bash",
     "suite:run": "bash ./scripts/bash/wrapper.bash ./scripts/bash/suite/run.bash",
+    "suite:live": "bash ./scripts/bash/wrapper.bash ./scripts/bash/suite/live.bash",
     "deploy:contracts": "bash ./scripts/bash/wrapper.bash ./scripts/bash/deploy/contracts.bash",
     "deploy:dvn": "bash ./scripts/bash/wrapper.bash ./scripts/bash/deploy/dvn.bash",
     "test:contracts": "forge test",

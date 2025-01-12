@@ -2,7 +2,6 @@ import { Hex } from "viem";
 
 export type ChainConfig = {
     rpcUrl: string,
-    rpcSslUrl: string,
     chainId: number,
     endpointId: number,
     endpoint: Hex,
@@ -20,7 +19,6 @@ export type AdminConfig = {
 export function getChainConfig(name: string): ChainConfig {
     const nameUpper = name.toUpperCase();
     const rpcUrl = process.env[nameUpper + "_RPC_URL"]!;
-    const rpcSslUrl = process.env[nameUpper + "_RPC_SSL_URL"]!;
     const chainId = parseInt(process.env[nameUpper + "_CHAIN_ID"]!);
     const endpointId = parseInt(process.env[nameUpper + "_ENDPOINT_ID"]!);
     const endpoint = process.env[nameUpper + "_ENDPOINT_ADDRESS"]! as Hex;
@@ -32,8 +30,8 @@ export function getChainConfig(name: string): ChainConfig {
     const oapp = process.env[nameUpper + "_OAPP_ADDRESS"]! as Hex;
     const priceFeed = process.env[nameUpper + "_PRICE_FEED"]! as Hex;
 
-    if ( rpcUrl && rpcSslUrl && chainId && endpointId && endpoint && messageLibs.length && priceFeed ) {
-        return { rpcUrl, rpcSslUrl, chainId, endpoint, endpointId, messageLibs, dvn, oapp, priceFeed }
+    if ( rpcUrl && chainId && endpointId && endpoint && messageLibs.length && priceFeed ) {
+        return { rpcUrl, chainId, endpoint, endpointId, messageLibs, dvn, oapp, priceFeed }
     }
 
     throw new Error("Chain config not present");
