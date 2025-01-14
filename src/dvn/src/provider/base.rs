@@ -44,6 +44,10 @@ impl BaseProvider {
     pub fn new(urls: Vec<String>) -> Self {
         let mut hasher = blake3::Hasher::new();
         urls.iter().for_each(|url| { hasher.update(url.as_bytes()); });
+
+        let current_cycles_balance = ic_cdk::api::canister_balance128().to_string();
+        hasher.update(current_cycles_balance.as_bytes());
+
         let uid = hasher.finalize().to_string();
 
         Self {
