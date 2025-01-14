@@ -3,6 +3,12 @@
 Decentralized LayerZero V2 DVN running on ICP network, supports SendUln30X and ReceiveUln30X message libraries. <br />
 *Currently in active development.*
 
+## Trust Model
+
+The current implementation relies on multiple JSON-RPC providers accessed through idempotent proxies. The canister does a threshold-2 consensus between the RPC providers before approving a payload.
+
+## Deployments
+
 Deployed canister: [ccpzm-baaaa-aaaam-adzza-cai](https://dashboard.internetcomputer.org/canister/ccpzm-baaaa-aaaam-adzza-cai)
 
 Supported chains and DVN contract addresses:
