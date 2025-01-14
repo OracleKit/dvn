@@ -91,7 +91,7 @@ impl BaseProvider {
         async move {
             let serialized_requests = serde_json::to_vec(&requests.data()).unwrap();
             let transform_context = requests.context();
-            let max_response_bytes = requests.max_response_bytes() + 500;
+            let max_response_bytes = requests.max_response_bytes() + 1000;
 
             let (response, ) = http_request(CanisterHttpRequestArgument {
                 url: self.pick_rpc_url(),
