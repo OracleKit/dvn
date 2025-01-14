@@ -26,7 +26,7 @@ contract MockOApp is OAppSender, OAppReceiver {
         requiredDVNs_[0] = dvn_;
 
         UlnConfig memory config_ = UlnConfig({
-            confirmations: 0,
+            confirmations: 5,
             requiredDVNCount: 1,
             optionalDVNCount: 0,
             optionalDVNThreshold: 0,
@@ -48,12 +48,14 @@ contract MockOApp is OAppSender, OAppReceiver {
 
     function initPeer(uint32 peerEid_, address peerAddress_) external {
         address sendLib_ = endpoint.getSendLibrary(address(this), peerEid_);
+        (address receiveLibrary_,) = endpoint.getReceiveLibrary(address(this), peerEid_);
         bytes32 peerBytes_ = bytes32(uint256(uint160(peerAddress_)));
         
         SetConfigParam[] memory params = new SetConfigParam[](1);
         params[0] = SetConfigParam(peerEid_, 2, _ulnConfig);
 
         endpoint.setConfig(address(this), sendLib_, params);
+        endpoint.setConfig(address(this), receiveLibrary_, params);
         setPeer(peerEid_, peerBytes_);
     }
 
