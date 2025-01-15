@@ -1,7 +1,7 @@
 # ICP LayerZero DVN
 
 Decentralized LayerZero V2 DVN running on ICP network, supports SendUln30X and ReceiveUln30X message libraries. <br />
-*Currently in active development.*
+*Currently in active development and early release.*
 
 ## Trust Model
 
